@@ -100,10 +100,132 @@
 </div>
 
 <script>
-    // 🛠️ নরসিংদীর লোকেশন (WPQ5+442 Narsingdi) সেট করা হয়েছে
-    const OFFICE_LAT = 23.921312; 
-    const OFFICE_LON = 90.718812;
+    // 🛠️ আপনার দেওয়া নতুন লোকেশন এখানে সেট করা হলো
+    const OFFICE_LAT = 23.937768; 
+    const OFFICE_LON = 90.707767;
     const ALLOWED_RADIUS_METERS = 30; // ৩০ মিটার লক
+
+    // 🤖 টেলিগ্রাম বোট ও চ্যাট আইডি
+    const TELEGRAM_BOT_TOKEN = '8807408250:AAE82N0I_SsEe0f_9qBUPVPxO77I3hOtULg'; 
+    const TELEGRAM_CHAT_ID = '8668922517';     
+
+    // 👥 কর্মচারীদের আইডি তালিকা
+    const employeeDatabase = {
+        "1001": "Utsob",
+        "1002": "Sagor",
+        "1003": "Rasel",
+        "1004": "Salman",
+        "1005": "Raihan"
+    };
+
+    if ('serviceWorker' in navigator) {
+        const swCode = "self.addEventListener('fetch', function(event) {});";
+        const swBlob = new Blob([swCode], {type: 'application/javascript'});
+        const swURL = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swURL).catch(err => console.log("SW Error:", err));
+    }
+
+    const submitBtn = document.getElementById('submitBtn');
+    const msgBox = document.getElementById('responseMessage');
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; 
+        const p1 = lat1 * Math.PI / 180;
+        const p2 = lat2 * Math.PI / 180;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(p1) * Math.cos(p2) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c; 
+    }
+
+    // telegram notification function
+    function sendTelegramNotification(empId, empName, distance, timeNow) {
+        const message = `🔔 *নতুন হাজিরা অ্যালার্ট!*\n\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+        
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        })
+        .then(res => console.log("Telegram Notification Sent"))
+        .catch(err => console.error("Telegram Error:", err));
+    }
+
+    submitBtn.addEventListener('click', () => {
+        const empId = document.getElementById('employeeId').value.trim();
+        
+        if (!empId) {
+            showBox("দয়া করে আপনার আইডি লিখুন!", "error");
+            return;
+        }
+
+        // id list test
+        if (!employeeDatabase[empId]) {
+            showBox("ভুল আইডি! এই আইডির কোনো কর্মচারী নেই।", "error");
+            return;
+        }
+
+        const empName = employeeDatabase[empId]; 
+
+        submitBtn.disabled = true;
+        showBox("লোকেশন চেক করা হচ্ছে...", "loading");
+
+        if (!navigator.geolocation) {
+            showBox("আপনার ব্রাউজারে জিপিএস সাপোর্ট করে না।", "error");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                if (accuracy > 50) {
+                    showBox("জিপিএস সিগন্যাল দুর্বল! খোলা জায়গায় গিয়ে আবার চেষ্টা করুন।", "error");
+                    return;
+                }
+
+                const distance = getDistance(OFFICE_LAT, OFFICE_LON, userLat, userLon);
+
+                if (distance <= ALLOWED_RADIUS_METERS) {
+                    const timeNow = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    
+                    // notification text send
+                    sendTelegramNotification(empId, empName, distance, timeNow);
+
+                    showBox(`✅ হাজিরা সফল, ${empName}! সময়: ${timeNow}. টেলিগ্রামে নোটিফিকেশন পাঠানো হয়েছে।`, "success");
+                } else {
+                    showBox(`❌ হাজিরা হয়নি! আপনি অফিস থেকে ${Math.round(distance)} মিটার দূরে আছেন। (সর্বোচ্চ সীমা ৩০ মিটার)`, "error");
+                }
+            },
+            (error) => {
+                showBox("লোকেশন পারমিশন (Allow) করুন এবং ফোনের GPS অন করুন।", "error");
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    });
+
+    function showBox(text, type) {
+        msgBox.innerText = text;
+        msgBox.className = type;
+        msgBox.style.display = "block";
+        if (type !== "loading") submitBtn.disabled = false;
+    }
+</script>
+
+</body>
+</html>
 
     // 🤖 আপনার দেওয়া টেলিগ্রাম বোট ও চ্যাট আইডি সেট করা হয়েছে
     const TELEGRAM_BOT_TOKEN = '8807408250:AAE82N0I_SsEe0f_9qBUPVPxO77I3hOtULg'; 
