@@ -153,6 +153,7 @@
 </div>
 
 <script>
+    // 📍 আপনার নিখুঁত লোকেশন (নরসিংদী)
     const OFFICE_LAT = 23.937768; 
     const OFFICE_LON = 90.707767;
     const ALLOWED_RADIUS_METERS = 30; 
@@ -173,23 +174,20 @@
     const msgBox = document.getElementById('responseMessage');
     const tableBody = document.getElementById('attendanceTableBody');
 
-    // 📅 ৭ দিনের নাম এবং সারা বছরের দিন, মাস, বছর অটোমেটিক জেনারেট করার ফাংশন
+    // 📅 কাস্টম বাংলা দিন, মাস (সঠিক নম্বর) ও বছর জেনারেট করার লজিক
     function getCustomBanglaDateTime() {
         const now = new Date();
         
-        // আপনার রিকোয়েস্ট অনুযায়ী ৭ দিনের কাস্টম নাম
         const customDays = ['রবি বার', 'সোম বার', 'মঙ্গল বার', 'বুধ বার', 'বৃহস্পতি বার', 'শুক্র বার', 'সনি বার'];
         const currentDayName = customDays[now.getDay()];
         
-        // দিন, মাস ও বছর অটোমেটিক বের করার লজিক
-        const dayNum = now.getDate(); // যেমন: ১০
-        const monthNum = now.getMonth() + 1; // যেমন: ৫ (জানুয়ারি = ১, মে = ৫)
-        const yearNum = now.getFullYear().toString().slice(-2); // ২০২৬ সাল থেকে শুধু '২৬' বের করবে
+        const dayNum = now.getDate(); 
+        const monthNum = now.getMonth() + 1; // 🛠️ জাভাস্ক্রিপ্টের জন্য এখন মে মাস = ৫ একদম কারেক্ট দেখাবে
+        const yearNum = now.getFullYear().toString().slice(-2); 
         
-        // ফাইনাল ফরম্যাট: সনি বার, ১০ তারিখ ৫ মাস ২৬
+        // ফরম্যাট: মঙ্গল বার, ২৬ তারিখ ৫ মাস ২৬
         const customDateString = `${currentDayName}, ${dayNum} তারিখ ${monthNum} মাস ${yearNum}`;
         
-        // সময় ফরম্যাট (AM/PM সহ)
         const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
         const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
 
@@ -208,7 +206,6 @@
             return;
         }
 
-        // নতুন হাজিরা সবার উপরে দেখাবে
         logs.reverse().forEach(log => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -224,7 +221,6 @@
     function saveAttendanceToLocal(empId, empName, dateNow, timeNow) {
         let logs = JSON.parse(localStorage.getItem('attendanceLogs')) || [];
         
-        // মেমোরি ক্লিয়ার রাখার জন্য ৩০ দিন আগের ডাটা অটো ফিল্টার
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         logs = logs.filter(log => new Date(log.rawDate) > thirtyDaysAgo);
@@ -257,7 +253,7 @@
     }
 
     function sendTelegramNotification(empId, empName, distance, timeNow, dateNow) {
-        const message = `🔔 *নতুন হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+        const message = `🔔 *নতুন হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
         const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         
         fetch(url, {
