@@ -9,10 +9,13 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: #f0f2f5;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            justify-content: flex-start;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .attendance-card {
             background: white;
@@ -22,6 +25,7 @@
             text-align: center;
             max-width: 360px;
             width: 100%;
+            margin-bottom: 30px;
         }
         h2 { color: #1a73e8; margin-bottom: 8px; font-size: 24px; }
         p.info { color: #5f6368; font-size: 14px; margin-bottom: 25px; }
@@ -62,6 +66,60 @@
         .success { background-color: #e6f4ea; color: #137333; }
         .error { background-color: #fce8e6; color: #c5221f; }
         .loading { background-color: #f1f3f4; color: #3c4043; }
+
+        /* টেবিল সেকশন */
+        .report-container {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 650px;
+            width: 100%;
+            overflow-x: auto;
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f2f5;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .report-header h3 { color: #3c4043; margin: 0; }
+        
+        .btn-download {
+            background-color: #34a853;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-download:hover { background-color: #2b8c44; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #5f6368;
+        }
+        tr:hover { background-color: #f8f9fa; }
+        .empty-row {
+            text-align: center;
+            color: #9aa0a6;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -73,6 +131,25 @@
     <input type="text" id="employeeId" class="emp-input" placeholder="আপনার আইডি (Employee ID) লিখুন">
     <button id="submitBtn" class="btn-submit">حاضরি দিন (Check-In)</button>
     <div id="responseMessage"></div>
+</div>
+
+<div class="report-container">
+    <div class="report-header">
+        <h3>চলতি মাসের হাজিরার রেকর্ড</h3>
+        <button id="downloadBtn" class="btn-download">Excel ডাউনলোড</button>
+    </div>
+    <table id="attendanceTable">
+        <thead>
+            <tr>
+                <th>বার ও তারিখ</th>
+                <th>আইডি</th>
+                <th>নাম</th>
+                <th>সময়</th>
+            </tr>
+        </thead>
+        <tbody id="attendanceTableBody">
+            </tbody>
+    </table>
 </div>
 
 <script>
@@ -92,7 +169,78 @@
     };
 
     const submitBtn = document.getElementById('submitBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
     const msgBox = document.getElementById('responseMessage');
+    const tableBody = document.getElementById('attendanceTableBody');
+
+    // 📅 ৭ দিনের নাম এবং সারা বছরের দিন, মাস, বছর অটোমেটিক জেনারেট করার ফাংশন
+    function getCustomBanglaDateTime() {
+        const now = new Date();
+        
+        // আপনার রিকোয়েস্ট অনুযায়ী ৭ দিনের কাস্টম নাম
+        const customDays = ['রবি বার', 'সোম বার', 'মঙ্গল বার', 'বুধ বার', 'বৃহস্পতি বার', 'শুক্র বার', 'সনি বার'];
+        const currentDayName = customDays[now.getDay()];
+        
+        // দিন, মাস ও বছর অটোমেটিক বের করার লজিক
+        const dayNum = now.getDate(); // যেমন: ১০
+        const monthNum = now.getMonth() + 1; // যেমন: ৫ (জানুয়ারি = ১, মে = ৫)
+        const yearNum = now.getFullYear().toString().slice(-2); // ২০২৬ সাল থেকে শুধু '২৬' বের করবে
+        
+        // ফাইনাল ফরম্যাট: সনি বার, ১০ তারিখ ৫ মাস ২৬
+        const customDateString = `${currentDayName}, ${dayNum} তারিখ ${monthNum} মাস ${yearNum}`;
+        
+        // সময় ফরম্যাট (AM/PM সহ)
+        const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
+
+        return {
+            fullDate: customDateString,
+            time: formattedTime
+        };
+    }
+
+    function loadAttendanceLog() {
+        const logs = JSON.parse(localStorage.getItem('attendanceLogs')) || [];
+        tableBody.innerHTML = '';
+
+        if (logs.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="empty-row">আজ পর্যন্ত কোনো হাজিরা রেকর্ড নেই।</td></tr>`;
+            return;
+        }
+
+        // নতুন হাজিরা সবার উপরে দেখাবে
+        logs.reverse().forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${log.date}</td>
+                <td>${log.id}</td>
+                <td><b>${log.name}</b></td>
+                <td>${log.time}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function saveAttendanceToLocal(empId, empName, dateNow, timeNow) {
+        let logs = JSON.parse(localStorage.getItem('attendanceLogs')) || [];
+        
+        // মেমোরি ক্লিয়ার রাখার জন্য ৩০ দিন আগের ডাটা অটো ফিল্টার
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        logs = logs.filter(log => new Date(log.rawDate) > thirtyDaysAgo);
+
+        const newLog = {
+            rawDate: new Date().toISOString(),
+            date: dateNow,
+            id: empId,
+            name: empName,
+            time: timeNow
+        };
+
+        logs.push(newLog);
+        localStorage.setItem('attendanceLogs', JSON.stringify(logs));
+        loadAttendanceLog(); 
+    }
 
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3; 
@@ -108,8 +256,8 @@
         return R * c; 
     }
 
-    function sendTelegramNotification(empId, empName, distance, timeNow) {
-        const message = `🔔 *নতুন হাজিরা অ্যালার্ট!*\n\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+    function sendTelegramNotification(empId, empName, distance, timeNow, dateNow) {
+        const message = `🔔 *নতুন হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
         const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         
         fetch(url, {
@@ -159,9 +307,12 @@
                 const distance = getDistance(OFFICE_LAT, OFFICE_LON, userLat, userLon);
 
                 if (distance <= ALLOWED_RADIUS_METERS) {
-                    const timeNow = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    sendTelegramNotification(empId, empName, distance, timeNow);
-                    showBox(`✅ হাজিরা সফল, ${empName}! সময়: ${timeNow}. টেলিগ্রামে নোটিফিকেশন পাঠানো হয়েছে।`, "success");
+                    const dt = getCustomBanglaDateTime();
+                    
+                    sendTelegramNotification(empId, empName, distance, dt.time, dt.fullDate);
+                    saveAttendanceToLocal(empId, empName, dt.fullDate, dt.time);
+
+                    showBox(`✅ হাজিরা সফল, ${empName}! সময়: ${dt.time}. রেকর্ড যুক্ত হয়েছে।`, "success");
                 } else {
                     showBox(`❌ হাজিরা হয়নি! আপনি অফিস থেকে ${Math.round(distance)} মিটার দূরে আছেন।`, "error");
                 }
@@ -173,12 +324,37 @@
         );
     });
 
+    downloadBtn.addEventListener('click', () => {
+        const logs = JSON.parse(localStorage.getItem('attendanceLogs')) || [];
+        if (logs.length === 0) {
+            alert("ডাউনলোড করার মতো কোনো হাজিরা রেকর্ড নেই!");
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+        csvContent += "বার ও তারিখ,আইডি,নাম,সময়\n";
+
+        logs.forEach(log => {
+            csvContent += `"${log.date}","${log.id}","${log.name}","${log.time}"\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "Attendance_Report.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
     function showBox(text, type) {
         msgBox.innerText = text;
         msgBox.className = type;
         msgBox.style.display = "block";
         if (type !== "loading") submitBtn.disabled = false;
     }
+
+    loadAttendanceLog();
 </script>
 </body>
 </html>
