@@ -115,15 +115,17 @@
             border-radius: 6px;
         }
         
-        table { width: 100%; border-collapse: collapse; text-align: center; font-size: 11px; background: white; min-width: 2200px; }
+        table { width: 100%; border-collapse: collapse; text-align: center; font-size: 11px; background: white; min-width: 2400px; }
         th, td { padding: 8px 6px; border: 1px solid #dcdcdc; vertical-align: middle; }
         th { background-color: #f1f3f4; color: #3c4043; font-weight: bold; }
         
         .day-subtext { display: block; font-size: 10px; color: #65676b; font-weight: normal; margin-top: 2px; }
         .meta-cell { text-align: left; background-color: #fafafa; font-weight: bold; padding-left: 8px; }
         
-        .grid-time-p { color: #137333; font-weight: bold; font-size: 11px; background: #e6f4ea; padding: 4px; border-radius: 4px; display: inline-block; }
-        .grid-time-l { color: #b06000; font-weight: bold; font-size: 11px; background: #fff4e5; padding: 4px; border-radius: 4px; display: inline-block; }
+        .time-box-container { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; }
+        .grid-time-in { color: #137333; font-weight: bold; font-size: 10px; background: #e6f4ea; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
+        .grid-time-late { color: #b06000; font-weight: bold; font-size: 10px; background: #fff4e5; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
+        .grid-time-out { color: #1a73e8; font-weight: bold; font-size: 10px; background: #e8f0fe; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
         .grid-a { color: #c5221f; font-weight: bold; font-size: 12px; }
         .grid-empty { color: #ccc; font-size: 11px; }
 
@@ -146,7 +148,7 @@
         
         .admin-section { display: none; width: 100%; max-width: 100%; }
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .btn-delete { background-color: transparent; color: #c5221f; border: none; cursor: pointer; font-size: 11px; padding: 0; margin-left: 3px; font-weight: bold; vertical-align: middle; touch-action: manipulation;}
+        .btn-delete { background-color: transparent; color: #c5221f; border: none; cursor: pointer; font-size: 12px; padding: 0 2px; font-weight: bold; vertical-align: middle; touch-action: manipulation;}
         
         .device-table { min-width: 100% !important; font-size: 13px; }
         .btn-reset-dev { background-color: #fff4e5; color: #b06000; border: 1px solid #ff9800; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; touch-action: manipulation; transition: 0.2s; }
@@ -159,7 +161,7 @@
     <h2>স্মার্ট হাজিরা</h2>
     <p class="info">Developed by সালমান</p>
     <input type="text" id="employeeId" class="emp-input" placeholder="আপনার আইডি (Employee ID) লিখুন">
-    <button id="submitBtn" class="btn-submit">হাজিরা দিন (Check-In)</button>
+    <button id="submitBtn" class="btn-submit">হাজিরা দিন (Entry / Exit)</button>
     <div id="responseMessage"></div>
     <div class="secret-dot" id="secretDotBtn">.</div>
 </div>
@@ -210,9 +212,10 @@
         </div>
         <div class="admin-grid">
             <input type="date" id="manualDate" class="admin-input">
-            <input type="time" id="manualTime" class="admin-input" value="10:00">
+            <input type="time" id="manualEntryTime" class="admin-input" placeholder="Entry Time" value="10:00">
+            <input type="time" id="manualExitTime" class="admin-input" placeholder="Exit Time">
         </div>
-        <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">তথ্য  যুক্ত / আপডেট করুন</button>
+        <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">তথ্য যুক্ত / আপডেট করুন</button>
     </div>
 
     <div class="report-container" style="max-width: 100%; overflow: hidden;">
@@ -249,7 +252,6 @@
 </div>
 
 <script>
-    // ⚙️ Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCFBj-6URVjyCsO3ERZQGroPi1eWAUaV6M",
         authDomain: "sallu-c83fa.firebaseapp.com",
@@ -263,10 +265,9 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 📍 আপনার দেওয়া এক্সাক্ট লাইভ লোকেশন ডাটা আপডেট করা হয়েছে
-    const OFFICE_LAT =23.937436; 
-    const OFFICE_LON =90.707879;
-    const ALLOWED_RADIUS_METERS = 500; // ৬০ মিটার রেডিয়াস লক 
+    const OFFICE_LAT = 23.937436; 
+    const OFFICE_LON = 90.707879;
+    const ALLOWED_RADIUS_METERS = 500; 
 
     const TELEGRAM_BOT_TOKEN = '8807408250:AAE82N0I_SsEe0f_9qBUPVPxO77I3hOtULg'; 
     const TELEGRAM_CHAT_ID = '8668922517';     
@@ -342,7 +343,7 @@
             const tempDate = new Date(currentYear, selectedMonth - 1, i);
             const dayName = banglaDays[tempDate.getDay()];
             const isTodayColumn = (isCurrentMonth && today.getDate() === i) ? 'class="today-highlight"' : '';
-            headerHtml += `<th ${isTodayColumn} style="min-width: 65px;">${i}<span class="day-subtext">${dayName}</span></th>`;
+            headerHtml += `<th ${isTodayColumn} style="min-width: 95px;">${i}<span class="day-subtext">${dayName}</span></th>`;
         }
         headerHtml += `<th style="background-color: #e6f4ea; min-width: 40px;">P</th>`;
         headerHtml += `<th style="background-color: #fce8e6; min-width: 40px;">A</th>`;
@@ -372,13 +373,7 @@
             empLogs.forEach(log => {
                 if (log.rawDate) {
                     const dateDay = new Date(log.rawDate).getDate();
-                    let formattedTime = log.time;
-                    if(log.time && log.time.includes(':')) {
-                        const timeParts = log.time.split(':');
-                        const ampm = log.time.slice(-2);
-                        formattedTime = timeParts[0] + ':' + timeParts[1] + ' ' + ampm;
-                    }
-                    monthDaysData[dateDay] = { status: log.status, timeText: formattedTime, fbKey: log.fbKey };
+                    monthDaysData[dateDay] = log;
                 }
             });
 
@@ -388,14 +383,22 @@
                 const isTodayCell = (isCurrentMonth && today.getDate() === d) ? 'class="today-highlight"' : '';
 
                 if (monthDaysData[d]) {
-                    const status = monthDaysData[d].status;
-                    const timeText = monthDaysData[d].timeText;
-                    const key = monthDaysData[d].fbKey;
+                    const logData = monthDaysData[d];
+                    const status = logData.status;
+                    const key = logData.fbKey;
                     
-                    if (status === 'Present' || status === 'Late') {
+                    if (status !== 'Absent') {
                         pCount++;
-                        let timeClass = status === 'Present' ? 'grid-time-p' : 'grid-time-l';
-                        daysHtml += `<td ${isTodayCell}><span class="${timeClass}">${timeText}</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`;
+                        let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late';
+                        let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa; font-size:9px;">No Exit</span>`;
+                        
+                        daysHtml += `<td ${isTodayCell}>
+                            <div class="time-box-container">
+                                <span class="${inTimeClass}">In: ${logData.time}</span>
+                                ${outHtml}
+                            </div>
+                            <button class="btn-delete" onclick="deleteRecord('${key}')">×</button>
+                        </td>`;
                     } else {
                         aCount++;
                         daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`;
@@ -436,7 +439,7 @@
     window.resetEmployeeDevice = function(empId) {
         if (confirm(`${employeeDatabase[empId]}-এর ডিভাইস লক রিসেট করতে চান?`)) {
             db.ref(`registeredDevices/${empId}`).remove().then(() => {
-                alert("ডিভাইস সফলভাবে রিসেট হয়েছে! সে এখন যেকোনো নতুন ফোন থেকে ফার্স্ট টাইম হাজিরা দিতে পারবে।");
+                alert("ডিভাইস সফলভাবে রিসেট হয়েছে!");
             });
         }
     }
@@ -459,29 +462,57 @@
     function getCustomBanglaDateTime(manualDateStr = null, manualTimeStr = null) {
         const now = manualDateStr ? new Date(manualDateStr + 'T' + (manualTimeStr || '00:00')) : new Date();
         const customDays = ['রবি বার', 'সোম বার', 'মঙ্গল বার', 'বুধ বার', 'বৃহস্পতি বার', 'শুক্র বার', 'শনি বার'];
-        return { fullDate: `${customDays[now.getDay()]}, ${now.getDate()} তারিখ ${now.getMonth() + 1} মাস ${now.getFullYear().toString().slice(-2)}`, time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }), rawObj: now };
+        
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        minutes = minutes < 10 ? '0'+minutes : minutes;
+        let strTime = (hours < 10 ? '0'+hours : hours) + ':' + minutes + ' ' + ampm;
+
+        return { 
+            fullDate: `${customDays[now.getDay()]}, ${now.getDate()} তারিখ ${now.getMonth() + 1} মাস ${now.getFullYear().toString().slice(-2)}`, 
+            time: strTime, 
+            rawObj: now 
+        };
     }
 
-    function saveAttendanceToFirebase(empId, empName, dtObj, statusOverride = null) {
-        let status = "Present";
-        if (statusOverride) status = statusOverride;
-        else {
-            const hours = dtObj.rawObj.getHours(); const minutes = dtObj.rawObj.getMinutes();
-            if (hours > 10 || (hours === 10 && minutes > 30)) status = "Late";
-            if (hours >= 20) status = "Absent";
-        }
-        db.ref('attendanceLogs').push().set({ rawDate: dtObj.rawObj.toISOString(), date: dtObj.fullDate, id: empId, name: empName, time: dtObj.time, status: status });
-        return status;
+    function formatManualTime12Hour(timeStr) {
+        if(!timeStr) return "";
+        const parts = timeStr.split(':');
+        let hours = parseInt(parts[0]);
+        let minutes = parseInt(parts[1]);
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return (hours < 10 ? '0'+hours : hours) + ':' + (minutes < 10 ? '0'+minutes : minutes) + ' ' + ampm;
     }
 
     window.deleteRecord = function(key) { if (confirm("তথ্য টি মুছে ফেলতে চান?")) db.ref(`attendanceLogs/${key}`).remove(); }
 
     document.getElementById('manualSubmitBtn').addEventListener('click', () => {
-        const mId = document.getElementById('manualEmpId').value; const mStatus = document.getElementById('manualStatus').value;
-        const mDate = document.getElementById('manualDate').value; const mTime = document.getElementById('manualTime').value;
+        const mId = document.getElementById('manualEmpId').value; 
+        const mStatus = document.getElementById('manualStatus').value;
+        const mDate = document.getElementById('manualDate').value; 
+        const mEntryTime = document.getElementById('manualEntryTime').value;
+        const mExitTime = document.getElementById('manualExitTime').value;
+        
         if (!mId || !mDate) { alert("সঠিক তথ্য দিন!"); return; }
-        saveAttendanceToFirebase(mId, employeeDatabase[mId], getCustomBanglaDateTime(mDate, mTime), mStatus);
-        alert(`তথ্য  সফলভাবে যুক্ত হয়েছে।`);
+        
+        const dtObj = getCustomBanglaDateTime(mDate, mEntryTime);
+        const formattedExit = mExitTime ? formatManualTime12Hour(mExitTime) : "";
+
+        db.ref('attendanceLogs').push().set({ 
+            rawDate: dtObj.rawObj.toISOString(), 
+            date: dtObj.fullDate, 
+            id: mId, 
+            name: employeeDatabase[mId], 
+            time: dtObj.time, 
+            exitTime: formattedExit, 
+            status: mStatus 
+        });
+        alert(`তথ্য সফলভাবে যুক্ত হয়েছে।`);
     });
 
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -490,10 +521,14 @@
         return R * (2 * Math.atan2(Math.sqrt(Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2)), Math.sqrt(1-(Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2))))); 
     }
 
-    function sendTelegramNotification(empId, empName, distance, timeNow, dateNow, status) {
+    function sendTelegramNotification(empId, empName, distance, timeNow, dateNow, status, isExit = false) {
+        let textMsg = `🔔 *হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📊 স্ট্যাটাস: ${status === 'Present' ? '✅ উপস্থিত (Entry)' : (status === 'Late' ? '⚠️ লেট (Entry)' : '❌ অনুপস্থিত')}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+        if(isExit) {
+            textMsg = `🚪 *অফিস এক্সিট (Exit) অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ বের হওয়ার সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+        }
         fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: `🔔 *হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📊 স্ট্যাটাস: ${status === 'Present' ? '✅ উপস্থিত' : (status === 'Late' ? '⚠️ লেট' : '❌ অনুপস্থিত')}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`, parse_mode: 'Markdown' })
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: textMsg, parse_mode: 'Markdown' })
         });
     }
 
@@ -504,7 +539,22 @@
         const currentDeviceId = getLocalDeviceId();
 
         submitBtn.disabled = true;
-        showBox("ডিভাইস সিকিউরিটি চেক করা হচ্ছে...", "loading");
+        showBox("ডাটাবেজ ও সিকিউরিটি চেক করা হচ্ছে...", "loading");
+
+        const todayObj = new Date();
+        const currentDay = todayObj.getDate();
+        const currentMonth = todayObj.getMonth() + 1;
+        const currentYear = todayObj.getFullYear();
+
+        // আজকের হাজিরা ডাটা খোঁজা হচ্ছে
+        const userTodayRecords = globalAttendanceLogs.filter(log => {
+            if (log.id !== empId) return false;
+            if (!log.rawDate) return false;
+            const logDate = new Date(log.rawDate);
+            return logDate.getDate() === currentDay && 
+                   (logDate.getMonth() + 1) === currentMonth && 
+                   logDate.getFullYear() === currentYear;
+        });
 
         db.ref(`registeredDevices/${empId}`).once('value', (snapshot) => {
             const registeredDeviceId = snapshot.val();
@@ -522,9 +572,33 @@
                     const distance = getDistance(OFFICE_LAT, OFFICE_LON, position.coords.latitude, position.coords.longitude);
                     if (distance <= ALLOWED_RADIUS_METERS) {
                         const dt = getCustomBanglaDateTime();
+
+                        // 🛑 এক্সিট টাইম (Exit Time) আপডেট লজিক
+                        if (userTodayRecords.length > 0) {
+                            const mainRecord = userTodayRecords[0]; // আজকের অলরেডি থাকা এন্ট্রি
+                            
+                            if (mainRecord.status === 'Absent') {
+                                showBox("❌ আপনি আজ অলরেডি অনুপস্থিত (Absent) হিসেবে চিহ্নিত।", "error");
+                                submitBtn.disabled = false;
+                                return;
+                            }
+
+                            // ফায়ারবেসে Exit Time ও লাইভ ডাটা পুশ
+                            db.ref(`attendanceLogs/${mainRecord.fbKey}`).update({
+                                exitTime: dt.time
+                            }).then(() => {
+                                sendTelegramNotification(empId, employeeDatabase[empId], distance, dt.time, dt.fullDate, mainRecord.status, true);
+                                showBox(`🚪 এক্সিট সফল! বের হওয়ার সময়: ${dt.time}`, "success");
+                            }).catch((err) => {
+                                showBox("❌ ডাটাবেজ আপডেট এরর!", "error");
+                            });
+                            return;
+                        }
+
+                        // 🟢 নতুন এন্ট্রি টাইম (Entry Time) লজিক
                         if (dt.rawObj.getHours() >= 20) {
                             showBox("❌ সময় শেষ!", "error");
-                            saveAttendanceToFirebase(empId, employeeDatabase[empId], dt, "Absent");
+                            db.ref('attendanceLogs').push().set({ rawDate: dt.rawObj.toISOString(), date: dt.fullDate, id: empId, name: employeeDatabase[empId], time: dt.time, exitTime: "", status: "Absent" });
                             return;
                         }
 
@@ -532,9 +606,22 @@
                             db.ref(`registeredDevices/${empId}`).set(currentDeviceId);
                         }
 
-                        const finalStatus = saveAttendanceToFirebase(empId, employeeDatabase[empId], dt);
-                        sendTelegramNotification(empId, employeeDatabase[empId], distance, dt.time, dt.fullDate, finalStatus);
-                        showBox("✅ হাজিরা সফল! সময়: " + dt.time, "success");
+                        let finalStatus = "Present";
+                        const hours = dt.rawObj.getHours(); const minutes = dt.rawObj.getMinutes();
+                        if (hours > 10 || (hours === 10 && minutes > 30)) finalStatus = "Late";
+
+                        db.ref('attendanceLogs').push().set({ 
+                            rawDate: dt.rawObj.toISOString(), 
+                            date: dt.fullDate, 
+                            id: empId, 
+                            name: employeeDatabase[empId], 
+                            time: dt.time, 
+                            exitTime: "", 
+                            status: finalStatus 
+                        });
+
+                        sendTelegramNotification(empId, employeeDatabase[empId], distance, dt.time, dt.fullDate, finalStatus, false);
+                        showBox("✅ হাজিরা (Entry) সফল! সময়: " + dt.time, "success");
                     } else {
                         showBox("❌ আপনি অফিস থেকে " + Math.round(distance) + " মিটার দূরে আছেন।", "error");
                     }
@@ -550,8 +637,8 @@
 
     downloadBtn.addEventListener('click', () => {
         if (globalAttendanceLogs.length === 0) { alert("কোনো রেকর্ড নেই!"); return; }
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFFআইডি,নাম,তারিখ,সময়,স্ট্যাটাস\n";
-        globalAttendanceLogs.forEach(log => { csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.status}"\n`; });
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFআইডি,নাম,তারিখ,ইন টাইম,আউট টাইম,স্ট্যাটাস\n";
+        globalAttendanceLogs.forEach(log => { csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.exitTime || '-'}","${log.status}"\n`; });
         const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri);
         link.setAttribute("download", `Attendance_Sheet_Month_${monthFilter.value}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
     });
