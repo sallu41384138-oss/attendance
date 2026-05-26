@@ -127,7 +127,6 @@
         .grid-a { color: #c5221f; font-weight: bold; font-size: 12px; }
         .grid-empty { color: #ccc; font-size: 11px; }
 
-        /* ✨ অটো-হাইলাইট স্টাইল: আজকের রিয়েল-টাইম কলামের জন্য */
         .today-highlight {
             background-color: #eaf2fd !important;
             border-left: 2px solid #1a73e8 !important;
@@ -149,7 +148,6 @@
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .btn-delete { background-color: transparent; color: #c5221f; border: none; cursor: pointer; font-size: 11px; padding: 0; margin-left: 3px; font-weight: bold; vertical-align: middle; touch-action: manipulation;}
         
-        /* 📱 ডিভাইস সিকিউরিটি প্যানেল টেবিল স্টাইল */
         .device-table { min-width: 100% !important; font-size: 13px; }
         .btn-reset-dev { background-color: #fff4e5; color: #b06000; border: 1px solid #ff9800; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; touch-action: manipulation; transition: 0.2s; }
         .btn-reset-dev:active { background-color: #ffe0b2; }
@@ -214,7 +212,7 @@
             <input type="date" id="manualDate" class="admin-input">
             <input type="time" id="manualTime" class="admin-input" value="10:00">
         </div>
-        <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">তথ্য  যুক্ত / আপডেট করুন</button>
+        <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">রেকورد যুক্ত / আপডেট করুন</button>
     </div>
 
     <div class="report-container" style="max-width: 100%; overflow: hidden;">
@@ -265,9 +263,10 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const OFFICE_LAT = 23.937768; 
-    const OFFICE_LON = 90.707767;
-    const ALLOWED_RADIUS_METERS = 30; 
+    // 📍 আপনার দেওয়া এক্সাক্ট লাইভ লোকেশন ডাটা আপডেট করা হয়েছে
+    const OFFICE_LAT = 23.918174; 
+    const OFFICE_LON = 90.697415;
+    const ALLOWED_RADIUS_METERS = 60; // ৬০ মিটার রেডিয়াস লক 
 
     const TELEGRAM_BOT_TOKEN = '8807408250:AAE82N0I_SsEe0f_9qBUPVPxO77I3hOtULg'; 
     const TELEGRAM_CHAT_ID = '8668922517';     
@@ -299,7 +298,6 @@
     }
     setAutomaticCurrentMonth();
 
-    // 🔑 ব্রাউজারের নিজস্ব ডিভাইস আইডি ট্র্যাকার
     function getLocalDeviceId() {
         let devId = localStorage.getItem('office_app_device_token');
         if (!devId) {
@@ -309,13 +307,11 @@
         return devId;
     }
 
-    // 🔴 ডট ট্রিক
     document.getElementById('secretDotBtn').addEventListener('click', () => {
         const loginCard = document.getElementById('adminLoginCard');
         loginCard.style.display = loginCard.style.display === 'block' ? 'none' : 'block';
     });
 
-    // 🔒 লগইন
     document.getElementById('adminLoginBtn').addEventListener('click', () => {
         const user = document.getElementById('adminUsername').value.trim();
         const pass = document.getElementById('adminPassword').value;
@@ -420,7 +416,6 @@
         });
     }
 
-    // 📱 ডিভাইস ড্যাশবোর্ড রেন্ডারার
     function renderDeviceDashboard() {
         if (document.getElementById('adminDashboard').style.display !== 'block') return;
         deviceTableBody.innerHTML = '';
@@ -438,7 +433,6 @@
         });
     }
 
-    // 🔄 ডিভাইস রিসেট ফাংশন
     window.resetEmployeeDevice = function(empId) {
         if (confirm(`${employeeDatabase[empId]}-এর ডিভাইস লক রিসেট করতে চান?`)) {
             db.ref(`registeredDevices/${empId}`).remove().then(() => {
@@ -447,7 +441,6 @@
         }
     }
 
-    // 📡 Firebase লাইভ লিসেনার
     db.ref('attendanceLogs').on('value', (snapshot) => {
         const data = snapshot.val(); globalAttendanceLogs = [];
         if (data) {
@@ -481,14 +474,14 @@
         return status;
     }
 
-    window.deleteRecord = function(key) { if (confirm("তথ্য টি মুছে ফেলতে চান?")) db.ref(`attendanceLogs/${key}`).remove(); }
+    window.deleteRecord = function(key) { if (confirm("রেকوردটি মুছে ফেলতে চান?")) db.ref(`attendanceLogs/${key}`).remove(); }
 
     document.getElementById('manualSubmitBtn').addEventListener('click', () => {
         const mId = document.getElementById('manualEmpId').value; const mStatus = document.getElementById('manualStatus').value;
         const mDate = document.getElementById('manualDate').value; const mTime = document.getElementById('manualTime').value;
         if (!mId || !mDate) { alert("সঠিক তথ্য দিন!"); return; }
         saveAttendanceToFirebase(mId, employeeDatabase[mId], getCustomBanglaDateTime(mDate, mTime), mStatus);
-        alert(`তথ্য  সফলভাবে যুক্ত হয়েছে।`);
+        alert(`রেকورد সফলভাবে যুক্ত হয়েছে।`);
     });
 
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -504,7 +497,6 @@
         });
     }
 
-    // 🚀 মেইন হাজিরা সাবমিশন ইঞ্জিন (ডিভাইস লক প্রটেকশনসহ)
     function handleAttendanceCheckIn() {
         const empId = document.getElementById('employeeId').value.trim();
         if (!empId || !employeeDatabase[empId]) { showBox("সঠিক আইডি দিন!", "error"); return; }
@@ -514,7 +506,6 @@
         submitBtn.disabled = true;
         showBox("ডিভাইস সিকিউরিটি চেক করা হচ্ছে...", "loading");
 
-        // ফায়ারবেস থেকে চেক করা হচ্ছে এই আইডি অন্য কোনো ফোনে রেজিস্টার্ড কিনা
         db.ref(`registeredDevices/${empId}`).once('value', (snapshot) => {
             const registeredDeviceId = snapshot.val();
 
@@ -537,7 +528,6 @@
                             return;
                         }
 
-                        // প্রথমবার হাজিরা দিলে তার ডিভাইস আইডি আজীবনের জন্য ফায়ারবেসে লক হবে
                         if (!registeredDeviceId) {
                             db.ref(`registeredDevices/${empId}`).set(currentDeviceId);
                         }
@@ -559,7 +549,7 @@
     submitBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleAttendanceCheckIn(); }, {passive: false});
 
     downloadBtn.addEventListener('click', () => {
-        if (globalAttendanceLogs.length === 0) { alert("কোনോ রেকর্ড নেই!"); return; }
+        if (globalAttendanceLogs.length === 0) { alert("কোনো রেকর্ড নেই!"); return; }
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFআইডি,নাম,তারিখ,সময়,স্ট্যাটাস\n";
         globalAttendanceLogs.forEach(log => { csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.status}"\n`; });
         const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri);
