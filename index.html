@@ -157,7 +157,7 @@
 
 <div class="attendance-card">
     <h2>স্মার্ট হাজিরা</h2>
-    <p class="info">লোকেশন ও ডিভাইস সিকিউরিটি লক অ্যাক্টিভ 🔒</p>
+    <p class="info">Developed by সালমান</p>
     <input type="text" id="employeeId" class="emp-input" placeholder="আপনার আইডি (Employee ID) লিখুন">
     <button id="submitBtn" class="btn-submit">হাজিরা দিন (Check-In)</button>
     <div id="responseMessage"></div>
@@ -212,7 +212,7 @@
             <input type="date" id="manualDate" class="admin-input">
             <input type="time" id="manualTime" class="admin-input" value="10:00">
         </div>
-        <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">রেকورد যুক্ত / আপডেট করুন</button>
+        <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">তথ্য  যুক্ত / আপডেট করুন</button>
     </div>
 
     <div class="report-container" style="max-width: 100%; overflow: hidden;">
@@ -263,11 +263,10 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 📍 আপনার দেওয়া এক্সাক্ট লোকেশন সেট করা হলো
-    const OFFICE_LAT = 23.937768; 
-    const OFFICE_LON = 90.707767;
-    // 📡 জিপিএস সিগন্যাল ফ্ল্যাকচুয়েশন হ্যান্ডেল করতে রেডিয়াস ১০০ মিটার করা হলো
-    const ALLOWED_RADIUS_METERS = 100; 
+    // 📍 আপনার দেওয়া এক্সাক্ট লাইভ লোকেশন ডাটা আপডেট করা হয়েছে
+    const OFFICE_LAT = 23.918174; 
+    const OFFICE_LON = 90.697415;
+    const ALLOWED_RADIUS_METERS = 60; // ৬০ মিটার রেডিয়াস লক 
 
     const TELEGRAM_BOT_TOKEN = '8807408250:AAE82N0I_SsEe0f_9qBUPVPxO77I3hOtULg'; 
     const TELEGRAM_CHAT_ID = '8668922517';     
@@ -475,14 +474,14 @@
         return status;
     }
 
-    window.deleteRecord = function(key) { if (confirm("রেকوردটি মুছে ফেলতে চান?")) db.ref(`attendanceLogs/${key}`).remove(); }
+    window.deleteRecord = function(key) { if (confirm("তথ্য টি মুছে ফেলতে চান?")) db.ref(`attendanceLogs/${key}`).remove(); }
 
     document.getElementById('manualSubmitBtn').addEventListener('click', () => {
         const mId = document.getElementById('manualEmpId').value; const mStatus = document.getElementById('manualStatus').value;
         const mDate = document.getElementById('manualDate').value; const mTime = document.getElementById('manualTime').value;
         if (!mId || !mDate) { alert("সঠিক তথ্য দিন!"); return; }
         saveAttendanceToFirebase(mId, employeeDatabase[mId], getCustomBanglaDateTime(mDate, mTime), mStatus);
-        alert(`রেকورد সফলভাবে যুক্ত হয়েছে।`);
+        alert(`তথ্য  সফলভাবে যুক্ত হয়েছে।`);
     });
 
     function getDistance(lat1, lon1, lat2, lon2) {
