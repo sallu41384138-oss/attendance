@@ -263,10 +263,11 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 📍 আপনার দেওয়া এক্সাক্ট লাইভ লোকেশন ডাটা আপডেট করা হয়েছে
-    const OFFICE_LAT = 23.918174; 
-    const OFFICE_LON = 90.697415;
-    const ALLOWED_RADIUS_METERS = 60; // ৬০ মিটার রেডিয়াস লক 
+    // 📍 আপনার দেওয়া এক্সাক্ট লোকেশন সেট করা হলো
+    const OFFICE_LAT = 23.937768; 
+    const OFFICE_LON = 90.707767;
+    // 📡 জিপিএস সিগন্যাল ফ্ল্যাকচুয়েশন হ্যান্ডেল করতে রেডিয়াস ১০০ মিটার করা হলো
+    const ALLOWED_RADIUS_METERS = 100; 
 
     const TELEGRAM_BOT_TOKEN = '8807408250:AAE82N0I_SsEe0f_9qBUPVPxO77I3hOtULg'; 
     const TELEGRAM_CHAT_ID = '8668922517';     
