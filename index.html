@@ -1,1 +1,1704 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Attendance App Pro</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .attendance-card, .admin-login-card, .report-container {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 100%;
+            width: 100%;
+            margin-bottom: 25px;
+            box-sizing: border-box;
+        }
+        .attendance-card { max-width: 380px; text-align: center; position: relative; }
+        .admin-login-card { max-width: 380px; text-align: center; display: none; }
+        
+        h2 { color: #1a73e8; margin-bottom: 8px; font-size: 24px; margin-top: 0; }
+        h3 { color: #3c4043; margin-top: 0; font-size: 18px; }
+        p.info { color: #5f6368; font-size: 14px; margin-bottom: 25px; }
+        
+        .emp-input, .admin-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .btn-submit {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .btn-submit:active { background-color: #1557b0; }
+        .btn-submit:disabled { background-color: #bcc1c8; cursor: not-allowed; }
+        
+        .secret-dot {
+            color: #aaa;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            display: inline-block;
+            user-select: none;
+        }
+
+        #responseMessage {
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success { background-color: #e6f4ea; color: #137333; }
+        .error { background-color: #fce8e6; color: #c5221f; }
+        .loading { background-color: #f1f3f4; color: #3c4043; }
+
+        .excel-filter-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+        .month-dropdown {
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            border: 1px solid #ccd0d5;
+            background: white;
+            color: #1a73e8;
+        }
+        
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+        
+        table { width: 100%; border-collapse: collapse; text-align: center; font-size: 11px; background: white; min-width: 2400px; }
+        th, td { padding: 8px 6px; border: 1px solid #dcdcdc; vertical-align: middle; }
+        th { background-color: #f1f3f4; color: #3c4043; font-weight: bold; }
+        
+        .day-subtext { display: block; font-size: 10px; color: #65676b; font-weight: normal; margin-top: 2px; }
+        .meta-cell { text-align: left; background-color: #fafafa; font-weight: bold; padding-left: 8px; }
+        
+        .time-box-container { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; }
+        .grid-time-in { color: #137333; font-weight: bold; font-size: 10px; background: #e6f4ea; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
+        .grid-time-late { color: #b06000; font-weight: bold; font-size: 10px; background: #fff4e5; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
+        .grid-time-out { color: #1a73e8; font-weight: bold; font-size: 10px; background: #e8f0fe; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
+        .grid-a { color: #c5221f; font-weight: bold; font-size: 12px; }
+        .grid-empty { color: #ccc; font-size: 11px; }
+
+        .today-highlight {
+            background-color: #eaf2fd !important;
+            border-left: 2px solid #1a73e8 !important;
+            border-right: 2px solid #1a73e8 !important;
+            font-weight: bold;
+        }
+        th.today-highlight { background-color: #1a73e8 !important; color: white !important; }
+        th.today-highlight .day-subtext { color: #d2e3fc !important; }
+
+        .summary-badge-p { background-color: #e6f4ea; color: #137333; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
+        .summary-badge-a { background-color: #fce8e6; color: #c5221f; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
+
+        .btn-download {
+            background-color: #34a853; color: white; border: none; padding: 8px 12px;
+            font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; touch-action: manipulation;
+        }
+        
+        .admin-section { display: none; width: 100%; max-width: 100%; }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .btn-delete { background-color: transparent; color: #c5221f; border: none; cursor: pointer; font-size: 12px; padding: 0 2px; font-weight: bold; vertical-align: middle; touch-action: manipulation;}
+        
+        .device-table { min-width: 100% !important; font-size: 13px; }
+        .btn-reset-dev { background-color: #fff4e5; color: #b06000; border: 1px solid #ff9800; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; touch-action: manipulation; transition: 0.2s; }
+        .btn-reset-dev:active { background-color: #ffe0b2; }
+
+        /* বেতন সেকশন স্টাইল */
+        .salary-input-cell { min-width: 90px; background-color: #f0f7ff; }
+        .salary-input {
+            width: 80px; padding: 4px 6px; border: 1px solid #1a73e8; border-radius: 5px;
+            font-size: 12px; font-weight: bold; color: #1a73e8; text-align: center;
+            outline: none; background: white;
+        }
+        .salary-deduct-cell { background-color: #fff4f4; min-width: 80px; }
+        .salary-net-cell { background-color: #f0faf0; min-width: 80px; }
+        .deduct-badge { color: #c5221f; font-weight: bold; font-size: 12px; }
+        .net-badge { color: #137333; font-weight: bold; font-size: 13px; }
+        .deduct-detail { font-size: 9px; color: #888; margin-top: 2px; }
+
+        .public-report-container {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 100%;
+            width: 100%;
+            margin-bottom: 25px;
+            box-sizing: border-box;
+        }
+        .public-badge-readonly {
+            display: inline-block;
+            background: #e8f0fe;
+            color: #1a73e8;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 9px;
+            border-radius: 12px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .pub-sticky-id { position: sticky; left: 0; z-index: 2; background: #fafafa; }
+        .pub-sticky-name { position: sticky; left: 62px; z-index: 2; background: #fafafa; }
+        thead .pub-sticky-id, thead .pub-sticky-name { background: #f1f3f4; z-index: 3; }
+        .pub-salary-cell { background-color: #f0faf0; min-width: 75px; font-weight: bold; font-size: 11px; color: #137333; }
+        .pub-deduct-cell { background-color: #fff4f4; min-width: 75px; font-size: 10px; color: #c5221f; font-weight: bold; }
+        .pub-late-cell { background-color: #fff8e1; min-width: 65px; font-size: 10px; color: #b06000; font-weight: bold; }
+        .pub-absent-cell { background-color: #fce8e6; min-width: 55px; font-size: 11px; color: #c5221f; font-weight: bold; }
+        .pub-net-cell { background-color: #e6f4ea; min-width: 75px; font-weight: bold; font-size: 12px; color: #137333; }
+        .btn-admin-logout { background: #c5221f; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; margin-bottom: 15px; touch-action: manipulation; }
+        .adm-sticky-id { position: sticky; left: 0; z-index: 2; background: #fff; }
+        .adm-sticky-name { position: sticky; left: 62px; z-index: 2; background: #fff; }
+        thead .adm-sticky-id, thead .adm-sticky-name { background: #f1f3f4; z-index: 3; }
+        .late-report-container { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-width: 100%; width: 100%; margin-bottom: 25px; box-sizing: border-box; }
+        .late-report-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .late-report-table th { background: #fff3cd; color: #856404; padding: 8px 10px; text-align: center; font-weight: bold; border: 1px solid #ffc107; white-space: nowrap; }
+        .late-report-table td { padding: 7px 10px; text-align: center; border: 1px solid #f0e68c; white-space: nowrap; }
+        .late-report-table tr:nth-child(even) { background: #fffde7; }
+        .late-report-table tr:hover { background: #fff8c5; }
+        .late-emp-header { background: #ff9800 !important; color: white !important; font-weight: bold; text-align: left !important; padding-left: 12px !important; border: none !important; }
+        .lr-minutes { color: #c5221f; font-weight: bold; }
+        .lr-deduct { color: #c5221f; font-weight: bold; }
+        .lr-name { color: #1a73e8; font-weight: bold; }
+        .lr-empty { color: #aaa; font-style: italic; font-size: 12px; text-align: center; padding: 15px; }
+        .early-report-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .early-report-table th { background: #cce5ff; color: #004085; padding: 8px 10px; text-align: center; font-weight: bold; border: 1px solid #99caff; white-space: nowrap; }
+        .early-report-table td { padding: 7px 10px; text-align: center; border: 1px solid #b8daff; white-space: nowrap; }
+        .early-report-table tr:nth-child(even) { background: #e8f4ff; }
+        .early-report-table tr:hover { background: #cce5ff; }
+        .er-minutes { color: #004085; font-weight: bold; }
+        .er-deduct { color: #c5221f; font-weight: bold; }
+
+        /* ── সেটিংস ও GPS সেটিংস ── */
+        .settings-container {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 520px;
+            width: 100%;
+            margin: 0 auto 25px auto;
+            box-sizing: border-box;
+        }
+        .settings-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #3c4043;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8eaed;
+        }
+        .settings-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .settings-row .settings-group { flex: 1; min-width: 130px; }
+        .settings-group { margin-bottom: 14px; }
+        .settings-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #5f6368;
+            margin-bottom: 5px;
+        }
+        .settings-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #3c4043;
+            background: #fff;
+            outline: none;
+            box-sizing: border-box;
+            transition: border 0.15s;
+        }
+        .settings-input:focus { border-color: #1a73e8; }
+        .settings-input:disabled { background: #f1f3f4; color: #80868b; }
+        .btn-settings-save {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 11px 22px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            touch-action: manipulation;
+        }
+        .btn-settings-save:hover { background-color: #1557b0; }
+        .btn-settings-save:active { background-color: #0d47a1; }
+        .btn-pwd-change {
+            background-color: #f1f3f4;
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            padding: 11px 22px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            touch-action: manipulation;
+        }
+        .btn-pwd-change:hover { background-color: #e8eaed; }
+        .settings-divider { border: none; border-top: 1px solid #e8eaed; margin: 18px 0; }
+        .settings-helper { font-size: 12px; color: #80868b; margin-top: 5px; }
+        .gps-info-box {
+            background: #e8f0fe;
+            border: 1px solid #c7d8fc;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #1a56c4;
+            margin-bottom: 14px;
+        }
+        .gps-map-link { font-size: 13px; color: #1a73e8; text-decoration: none; display: inline-block; margin-bottom: 14px; font-weight: bold; }
+        .gps-map-link:hover { text-decoration: underline; }
+        .settings-msg {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 12px;
+            display: none;
+        }
+        .settings-msg.success { background: #e6f4ea; color: #137333; }
+        .settings-msg.error { background: #fce8e6; color: #c5221f; }
+
+        /* ── লাইভ GPS কার্ড ── */
+        .gps-live-card {
+            background: #f1f3f4;
+            border: 1.5px solid #dadce0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .gps-live-card.gps-inside  { background: #e6f4ea; border-color: #81c995; }
+        .gps-live-card.gps-outside { background: #fce8e6; border-color: #f28b82; }
+        .gps-live-card.gps-error   { background: #fff8e1; border-color: #fdd663; }
+        .gps-live-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .gps-live-status { font-size: 13px; font-weight: 700; }
+        .gps-inside  .gps-live-status { color: #137333; }
+        .gps-outside .gps-live-status { color: #c5221f; }
+        .gps-live-card.gps-error .gps-live-status { color: #b06000; }
+        .gps-meters-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .gps-meter-box { background: rgba(255,255,255,0.8); border: 1px solid #dadce0; border-radius: 8px; padding: 8px 10px; text-align: center; }
+        .gps-meter-label { font-size: 11px; color: #5f6368; margin-bottom: 2px; }
+        .gps-meter-value { font-size: 18px; font-weight: 800; color: #3c4043; line-height: 1.2; }
+        .gps-warn-text { font-size: 12px; font-weight: 600; color: #c5221f; margin-top: 8px; text-align: center; }
+        .gps-signal-lost { font-size: 12px; font-weight: 600; color: #b06000; background: #fff8e1; border: 1px solid #fdd663; border-radius: 6px; padding: 6px 10px; margin-top: 8px; text-align: center; }
+        .pulse-dot { position: relative; display: inline-block; width: 10px; height: 10px; }
+        .pulse-dot span { position: absolute; inset: 0; border-radius: 50%; animation: gps-ping 1s ease-in-out infinite; }
+        .pulse-dot i { position: absolute; inset: 0; border-radius: 50%; }
+        .gps-inside  .pulse-dot span { background: rgba(19,115,51,.4); }
+        .gps-inside  .pulse-dot i    { background: #137333; }
+        .gps-outside .pulse-dot span { background: rgba(197,34,31,.4); }
+        .gps-outside .pulse-dot i    { background: #c5221f; }
+        @keyframes gps-ping { 0%,100%{transform:scale(1);opacity:.8} 50%{transform:scale(2);opacity:0} }
+        .gps-spinner { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #5f6368; }
+        .gps-spin-icon { width: 14px; height: 14px; border: 2px solid #dadce0; border-top-color: #1a73e8; border-radius: 50%; animation: spin-gps .7s linear infinite; }
+        @keyframes spin-gps { to { transform: rotate(360deg); } }
+
+        /* ── ক্লিক সীমা সতর্কতা ── */
+        .click-limit-alert {
+            background: #fce8e6; color: #c5221f; border: 1px solid #f28b82;
+            border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600;
+            margin-bottom: 12px; display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- লাইভ ঘড়ি -->
+<div id="liveClock" style="background:#1a1f2e;color:#fff;border-radius:12px;padding:14px 24px;margin-bottom:14px;text-align:center;width:100%;max-width:380px;box-sizing:border-box;">
+    <div style="font-size:13px;font-weight:700;color:#90caf9;margin-bottom:4px;">🗓️ অফিস হাজিরা সিস্টেম</div>
+    <div id="clockTime" style="font-size:32px;font-weight:900;letter-spacing:2px;font-family:monospace;">00:00:00 AM</div>
+    <div id="clockDate" style="font-size:12px;color:#b0bec5;margin-top:4px;"></div>
+</div>
+
+<div class="attendance-card" id="attendanceCard">
+    <h2>স্মার্ট হাজিরা</h2>
+    <p class="info">Developed by সালমান</p>
+
+    <!-- অফিস সময় ইনফো (settings থেকে dynamic) -->
+    <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#1b5e20;text-align:center;">
+        🕐 অফিস সময়: <strong id="cardOfficeStart">—</strong> — <strong id="cardOfficeEnd">—</strong>
+        &nbsp;|&nbsp; <span id="officeTimeStatus" style="font-weight:700;"></span>
+    </div>
+
+    <!-- ক্লিক সীমা সতর্কতা -->
+    <div class="click-limit-alert" id="clickLimitAlert">
+        ⛔ আপনি আজকের অফিস সেশনে ইতিমধ্যে ২ বার হাজিরা দিয়েছেন।
+    </div>
+
+    <!-- লাইভ GPS কার্ড -->
+    <div class="gps-live-card" id="gpsLiveCard">
+        <div class="gps-live-top">
+            <span class="gps-live-status" id="gpsLiveStatus">
+                <span class="gps-spinner">
+                    <span class="gps-spin-icon"></span> লোকেশন যাচাই করা হচ্ছে...
+                </span>
+            </span>
+        </div>
+        <div class="gps-meters-row" id="gpsMetersRow" style="display:none;">
+            <div class="gps-meter-box">
+                <div class="gps-meter-label">অফিস থেকে দূরত্ব</div>
+                <div class="gps-meter-value" id="gpsDistanceVal">--</div>
+                <div class="gps-meter-label">মিটার</div>
+            </div>
+            <div class="gps-meter-box">
+                <div class="gps-meter-label">অনুমোদিত সীমা</div>
+                <div class="gps-meter-value" id="gpsRadiusVal">--</div>
+                <div class="gps-meter-label">মিটার</div>
+            </div>
+        </div>
+        <div id="gpsWarnText" class="gps-warn-text" style="display:none;">
+            ⛔ আপনি অফিস এলাকার বাহিরে আছেন। হাজিরা দেওয়া সম্ভব নয়।
+        </div>
+        <div id="gpsSignalLost" class="gps-signal-lost" style="display:none;">
+            ⚠️ GPS সিগন্যাল সাময়িকভাবে হারিয়ে গেছে। সর্বশেষ পরিচিত দূরত্ব দেখানো হচ্ছে।
+        </div>
+    </div>
+
+    <input type="text" id="employeeId" class="emp-input" placeholder="আপনার আইডি (Employee ID) লিখুন">
+
+    <!-- ডায়নামিক বাটন: সময় অনুযায়ী Entry / Exit -->
+    <button id="submitBtn" class="btn-submit" style="display:none;">হাজিরা Entry</button>
+    <div id="officeClosedMsg" style="display:none;background:#f1f3f4;border-radius:8px;padding:10px;font-size:13px;color:#5f6368;text-align:center;margin-bottom:8px;"></div>
+
+    <div id="responseMessage"></div>
+    <div class="secret-dot" id="secretDotBtn">.</div>
+</div>
+
+<div class="public-report-container" id="publicReportSection">
+    <div class="excel-filter-area">
+        <div>
+            <h3 style="margin:0; display:inline;">📋 হাজিরা রিপোর্ট <span class="public-badge-readonly">🔒 শুধু দেখুন</span></h3>
+        </div>
+        <div>
+            <label for="publicMonthFilter" style="font-weight:600; color:#5f6368; margin-right:8px;">মাস:</label>
+            <select id="publicMonthFilter" class="month-dropdown">
+                <option value="1">জানুয়ারি</option>
+                <option value="2">ফেব্রুয়ারি</option>
+                <option value="3">মার্চ</option>
+                <option value="4">এপ্রিল</option>
+                <option value="5">মে</option>
+                <option value="6">জুন</option>
+                <option value="7">জুলাই</option>
+                <option value="8">আগস্ট</option>
+                <option value="9">সেপ্টেম্বর</option>
+                <option value="10">অক্টোবর</option>
+                <option value="11">নভেম্বর</option>
+                <option value="12">ডিসেম্বর</option>
+            </select>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table id="publicSheetTable">
+            <thead><tr id="publicTableHeaderRow"></tr></thead>
+            <tbody id="publicSheetTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<div class="admin-login-card" id="adminLoginCard">
+    <h3>অ্যাডমিন প্যানেল লগইন</h3>
+    <input type="text" id="adminUsername" class="admin-input" placeholder="ইউজারনেম দিন">
+    <input type="password" id="adminPassword" class="admin-input" placeholder="পাসওয়ার্ড দিন">
+    <button id="adminLoginBtn" class="btn-submit" style="background-color: #3c4043;">লগইন করুন</button>
+</div>
+
+<div class="admin-section" id="adminDashboard">
+    <div style="text-align:right; max-width:1000px; margin: 0 auto 10px auto;">
+        <button class="btn-admin-logout" id="adminLogoutBtn">🚪 লগআউট</button>
+    </div>
+    <div class="report-container" style="max-width: 1000px; margin-left: auto; margin-right: auto; border: 1px solid #ff9800;">
+        <h3 style="color: #e65100; font-weight: bold;">🔒 ডিভাইস সিকিউরিটি ও প্রক্সি কন্ট্রোল</h3>
+        <p style="font-size: 12px; color: #666; margin-top:-5px;">কর্মচারী ফোন পরিবর্তন করলে বা প্রক্সি লক ক্লিয়ার করতে এখান থেকে "Reset Device" করুন।</p>
+        <div class="table-responsive">
+            <table class="device-table">
+                <thead>
+                    <tr style="background-color: #ffe0b2;">
+                        <th>আইডি</th>
+                        <th>নাম</th>
+                        <th>ডিভাইস লক স্ট্যাটাস</th>
+                        <th>অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="deviceTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="report-container" style="background: #eaf2fd; max-width: 1000px; margin-left: auto; margin-right: auto;">
+        <h3 style="color: #1a73e8; font-weight: bold;">🛠️ ম্যানুয়াল এন্ট্রি প্যানেল</h3>
+        <div class="admin-grid">
+            <select id="manualEmpId" class="admin-input">
+                <option value="">কর্মচারী নির্বাচন করুন...</option>
+                <option value="1001">Utsob (1001)</option>
+                <option value="1002">Sagor (1002)</option>
+                <option value="1003">Rasel (1003)</option>
+                <option value="1004">Salman (1004)</option>
+                <option value="1005">Raihan (1005)</option>
+            </select>
+            <select id="manualStatus" class="admin-input">
+                <option value="Present">Present (উপস্থিত)</option>
+                <option value="Off Day">Off Day (অফ ডে)</option>
+                <option value="Late">Late (দেরি)</option>
+                <option value="Absent">Absent (অনুপস্থিত)</option>
+            </select>
+        </div>
+        <div class="admin-grid">
+            <input type="date" id="manualDate" class="admin-input">
+            <input type="time" id="manualEntryTime" class="admin-input" placeholder="Entry Time" value="10:00">
+            <input type="time" id="manualExitTime" class="admin-input" placeholder="Exit Time">
+        </div>
+        <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">তথ্য যুক্ত / আপডেট করুন</button>
+    </div>
+
+    <div class="report-container" style="max-width: 100%; overflow: hidden;">
+        <div class="excel-filter-area">
+            <div>
+                <label for="monthFilter" style="font-weight: 600; color: #5f6368; margin-right: 8px;">মাস নির্বাচন:</label>
+                <select id="monthFilter" class="month-dropdown">
+                    <option value="1">জানুয়ারি (January)</option>
+                    <option value="2">ফেব্রুয়ারি (February)</option>
+                    <option value="3">মার্চ (March)</option>
+                    <option value="4">এপ্রিল (April)</option>
+                    <option value="5">মে (May)</option>
+                    <option value="6">জুন (June)</option>
+                    <option value="7">জুলাই (July)</option>
+                    <option value="8">আগস্ট (August)</option>
+                    <option value="9">সেপ্টেম্বর (September)</option>
+                    <option value="10">অক্টোবর (October)</option>
+                    <option value="11">নভেম্বর (November)</option>
+                    <option value="12">ডিসেম্বর (December)</option>
+                </select>
+            </div>
+            <button id="downloadBtn" class="btn-download">Excel ডাউনলোড</button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="sheetTable">
+                <thead>
+                    <tr id="tableHeaderRow"></tr>
+                </thead>
+                <tbody id="sheetTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+    <!-- ══════════════════════════════════════════
+         ⚙️ অফিস সেটিংস
+    ══════════════════════════════════════════ -->
+    <div class="settings-container">
+        <p class="settings-title">⚙️ অফিস সেটিংস</p>
+        <div class="settings-row">
+            <div class="settings-group">
+                <label class="settings-label" for="set-office-start">অফিস শুরু</label>
+                <input type="time" id="set-office-start" class="settings-input" value="11:00">
+            </div>
+            <div class="settings-group">
+                <label class="settings-label" for="set-office-end">অফিস শেষ</label>
+                <input type="time" id="set-office-end" class="settings-input" value="20:00">
+            </div>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label" for="set-working-days">মাসিক কর্মদিবস</label>
+            <input type="number" id="set-working-days" class="settings-input" min="1" max="31" value="26" style="max-width:140px;">
+            <p class="settings-helper">বেতন কর্তনের জন্য মাসে মোট কর্মদিবস সংখ্যা</p>
+        </div>
+        <button class="btn-settings-save" onclick="saveOfficeSettings()">✅ সেটিংস সংরক্ষণ</button>
+        <div id="settings-msg" class="settings-msg"></div>
+
+        <hr class="settings-divider">
+
+        <p class="settings-title" style="margin-top:0;">🔐 পাসওয়ার্ড পরিবর্তন</p>
+        <div class="settings-group">
+            <label class="settings-label" for="set-new-pwd">নতুন পাসওয়ার্ড</label>
+            <input type="password" id="set-new-pwd" class="settings-input" placeholder="নতুন পাসওয়ার্ড লিখুন">
+        </div>
+        <div class="settings-group">
+            <label class="settings-label" for="set-confirm-pwd">পাসওয়ার্ড নিশ্চিত করুন</label>
+            <input type="password" id="set-confirm-pwd" class="settings-input" placeholder="আবার লিখুন">
+        </div>
+        <button class="btn-pwd-change" onclick="changeAdminPassword()">🔐 পাসওয়ার্ড পরিবর্তন</button>
+        <div id="pwd-msg" class="settings-msg"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         📍 GPS সেটিংস
+    ══════════════════════════════════════════ -->
+    <div class="settings-container">
+        <p class="settings-title">📍 GPS রেডিয়াস সেটিংস</p>
+        <p style="font-size:13px; color:#5f6368; margin-bottom:14px; margin-top:-8px;">
+            শুধুমাত্র নির্ধারিত রেডিয়াসের ভেতরে থাকলে হাজিরা দেওয়া যাবে।
+        </p>
+        <a id="gps-admin-map-link" href="#" target="_blank" class="gps-map-link">📌 Google Maps-এ অফিসের অবস্থান দেখুন</a>
+        <div class="settings-row">
+            <div class="settings-group">
+                <label class="settings-label" for="set-gps-lat">অফিস Latitude</label>
+                <input type="number" id="set-gps-lat" class="settings-input" step="0.0000001" placeholder="23.9361442">
+            </div>
+            <div class="settings-group">
+                <label class="settings-label" for="set-gps-lng">অফিস Longitude</label>
+                <input type="number" id="set-gps-lng" class="settings-input" step="0.0000001" placeholder="90.7100412">
+            </div>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label" for="set-gps-radius">অনুমোদিত রেডিয়াস (মিটার)</label>
+            <input type="number" id="set-gps-radius" class="settings-input" min="10" max="10000" placeholder="100" style="max-width:180px;">
+            <p class="settings-helper">ন্যূনতম ১০ মিটার, সর্বোচ্চ ১০০০০ মিটার</p>
+        </div>
+        <div class="gps-info-box" id="gps-admin-info-box">ℹ️ বর্তমান GPS সেটিংস লোড হচ্ছে...</div>
+        <button class="btn-settings-save" onclick="saveGpsSettings()">📍 GPS সেটিংস সংরক্ষণ</button>
+        <div id="gps-settings-msg" class="settings-msg"></div>
+    </div>
+
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCFBj-6URVjyCsO3ERZQGroPi1eWAUaV6M",
+        authDomain: "sallu-c83fa.firebaseapp.com",
+        databaseURL: "https://sallu-c83fa-default-rtdb.firebaseio.com",
+        projectId: "sallu-c83fa",
+        storageBucket: "sallu-c83fa.firebasestorage.app",
+        messagingSenderId: "631719412254",
+        appId: "1:631719412254:web:67b174371e595644a6e40f"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ══════════════════════════════════════════
+    // সেটিংস ডেটা লেয়ার (localStorage)
+    // ══════════════════════════════════════════
+    const APP_SETTINGS_KEY = 'att_app_settings';
+    const APP_GPS_KEY = 'att_app_gps';
+
+    function getAppSettings() {
+        const d = localStorage.getItem(APP_SETTINGS_KEY);
+        if (d) return JSON.parse(d);
+        const def = { startTime: '11:00', endTime: '20:00', workingDays: 26, password: 'Aminternet' };
+        localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(def));
+        return def;
+    }
+    function saveAppSettings(obj) { localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(obj)); }
+
+    function getAppGpsSettings() {
+        const d = localStorage.getItem(APP_GPS_KEY);
+        if (d) return JSON.parse(d);
+        const def = { lat: 23.936146, lng: 90.710038, radius: 50 };
+        localStorage.setItem(APP_GPS_KEY, JSON.stringify(def));
+        return def;
+    }
+    function saveAppGpsData(obj) { localStorage.setItem(APP_GPS_KEY, JSON.stringify(obj)); }
+
+    // GPS মান localStorage থেকে লোড
+    function getOfficeLat() { return getAppGpsSettings().lat; }
+    function getOfficeLng() { return getAppGpsSettings().lng; }
+    function getAllowedRadius() { return getAppGpsSettings().radius; }
+
+    // ══════════════════════════════════════════
+    // সেটিংস ফর্ম লোড ও সেভ
+    // ══════════════════════════════════════════
+    function loadSettingsForms() {
+        const s = getAppSettings();
+        document.getElementById('set-office-start').value = s.startTime || '11:00';
+        document.getElementById('set-office-end').value = s.endTime || '20:00';
+        document.getElementById('set-working-days').value = s.workingDays || 26;
+        document.getElementById('set-new-pwd').value = '';
+        document.getElementById('set-confirm-pwd').value = '';
+
+        const g = getAppGpsSettings();
+        document.getElementById('set-gps-lat').value = g.lat;
+        document.getElementById('set-gps-lng').value = g.lng;
+        document.getElementById('set-gps-radius').value = g.radius;
+        document.getElementById('gps-admin-map-link').href = `https://maps.google.com/?q=${g.lat},${g.lng}`;
+        document.getElementById('gps-admin-info-box').innerHTML =
+            `ℹ️ বর্তমান কেন্দ্র: <b>${g.lat.toFixed(6)}, ${g.lng.toFixed(6)}</b><br>রেডিয়াস: <b>${g.radius} মিটার</b>`;
+    }
+
+    function showSettingsMsg(elId, text, type) {
+        const el = document.getElementById(elId);
+        el.textContent = text;
+        el.className = 'settings-msg ' + type;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+
+    window.saveOfficeSettings = function() {
+        const start = document.getElementById('set-office-start').value;
+        const end   = document.getElementById('set-office-end').value;
+        const days  = parseInt(document.getElementById('set-working-days').value);
+        if (!start || !end) { showSettingsMsg('settings-msg', '❌ অফিস সময় দিন', 'error'); return; }
+        if (isNaN(days) || days < 1 || days > 31) { showSettingsMsg('settings-msg', '❌ সঠিক কর্মদিবস সংখ্যা দিন (১–৩১)', 'error'); return; }
+        const s = getAppSettings();
+        s.startTime = start; s.endTime = end; s.workingDays = days;
+        saveAppSettings(s);
+        showSettingsMsg('settings-msg', '✅ সেটিংস সংরক্ষণ হয়েছে', 'success');
+    };
+
+    window.changeAdminPassword = function() {
+        const p1 = document.getElementById('set-new-pwd').value.trim();
+        const p2 = document.getElementById('set-confirm-pwd').value.trim();
+        if (!p1) { showSettingsMsg('pwd-msg', '❌ নতুন পাসওয়ার্ড দিন', 'error'); return; }
+        if (p1.length < 4) { showSettingsMsg('pwd-msg', '❌ পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে', 'error'); return; }
+        if (p1 !== p2) { showSettingsMsg('pwd-msg', '❌ পাসওয়ার্ড মিলছে না', 'error'); return; }
+        const s = getAppSettings(); s.password = p1; saveAppSettings(s);
+        document.getElementById('set-new-pwd').value = '';
+        document.getElementById('set-confirm-pwd').value = '';
+        showSettingsMsg('pwd-msg', '✅ পাসওয়ার্ড পরিবর্তন হয়েছে', 'success');
+    };
+
+    window.saveGpsSettings = function() {
+        const lat    = parseFloat(document.getElementById('set-gps-lat').value);
+        const lng    = parseFloat(document.getElementById('set-gps-lng').value);
+        const radius = parseInt(document.getElementById('set-gps-radius').value);
+        if (isNaN(lat) || lat < -90 || lat > 90)   { showSettingsMsg('gps-settings-msg', '❌ সঠিক Latitude দিন (-90 থেকে 90)', 'error'); return; }
+        if (isNaN(lng) || lng < -180 || lng > 180)  { showSettingsMsg('gps-settings-msg', '❌ সঠিক Longitude দিন (-180 থেকে 180)', 'error'); return; }
+        if (isNaN(radius) || radius < 10 || radius > 10000) { showSettingsMsg('gps-settings-msg', '❌ রেডিয়াস ১০ থেকে ১০০০০ মিটারের মধ্যে হতে হবে', 'error'); return; }
+        saveAppGpsData({ lat, lng, radius });
+        document.getElementById('gps-admin-map-link').href = `https://maps.google.com/?q=${lat},${lng}`;
+        document.getElementById('gps-admin-info-box').innerHTML =
+            `ℹ️ বর্তমান কেন্দ্র: <b>${lat.toFixed(6)}, ${lng.toFixed(6)}</b><br>রেডিয়াস: <b>${radius} মিটার</b>`;
+        showSettingsMsg('gps-settings-msg', '✅ GPS সেটিংস সংরক্ষণ হয়েছে', 'success');
+    };
+
+    const TELEGRAM_BOT_TOKEN = '8807408250:AAE82N0I_SsEe0f_9qBUPVPxO77I3hOtULg'; 
+    const TELEGRAM_CHAT_ID = '8668922517';     
+
+    const employeeDatabase = {
+        "1001": "Utsob",
+        "1002": "Sagor",
+        "1003": "Rasel",
+        "1004": "Salman",
+        "1005": "Raihan"
+    };
+
+    const banglaDays = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'];
+
+    const submitBtn = document.getElementById('submitBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const msgBox = document.getElementById('responseMessage');
+    const sheetTableBody = document.getElementById('sheetTableBody');
+    const tableHeaderRow = document.getElementById('tableHeaderRow');
+    const monthFilter = document.getElementById('monthFilter');
+    const deviceTableBody = document.getElementById('deviceTableBody');
+    
+    let globalAttendanceLogs = [];
+    let globalDevices = {};
+
+    function setAutomaticCurrentMonth() {
+        const liveDateObj = new Date();
+        monthFilter.value = liveDateObj.getMonth() + 1;
+    }
+    setAutomaticCurrentMonth();
+
+    // পেজ লোড হওয়ার সাথে সাথে লাইভ GPS ট্র্যাকিং শুরু
+    window.addEventListener('load', function() {
+        startGpsWatch();
+    });
+
+    function getLocalDeviceId() {
+        let devId = localStorage.getItem('office_app_device_token');
+        if (!devId) {
+            devId = 'DEV-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('office_app_device_token', devId);
+        }
+        return devId;
+    }
+
+    document.getElementById('secretDotBtn').addEventListener('click', () => {
+        const loginCard = document.getElementById('adminLoginCard');
+        loginCard.style.display = loginCard.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.getElementById('adminLoginBtn').addEventListener('click', () => {
+        const user = document.getElementById('adminUsername').value.trim();
+        const pass = document.getElementById('adminPassword').value;
+        const s = getAppSettings();
+        // ইউজারনেম 'sallu' অথবা 'admin' এবং সংরক্ষিত পাসওয়ার্ড চেক
+        if (user === 'sallu' && pass === s.password) {
+            document.getElementById('adminLoginCard').style.display = 'none';
+            document.getElementById('adminDashboard').style.display = 'block';
+            document.getElementById('secretDotBtn').style.display = 'none';
+            document.getElementById('attendanceCard').style.display = 'none';
+            document.getElementById('publicReportSection').style.display = 'none';
+            setAutomaticCurrentMonth();
+            generateTableHeader();
+            renderSheetDashboard(globalAttendanceLogs);
+            renderDeviceDashboard();
+            loadSettingsForms();
+        } else {
+            alert('ভুল ইউজারনেম অথবা পাসওয়ার্ড!');
+        }
+    });
+
+    document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+        document.getElementById('adminDashboard').style.display = 'none';
+        document.getElementById('secretDotBtn').style.display = 'inline-block';
+        document.getElementById('attendanceCard').style.display = 'block';
+        document.getElementById('publicReportSection').style.display = 'block';
+    });
+
+
+    function generateTableHeader() {
+        const selectedMonth = parseInt(monthFilter.value);
+        const currentYear = new Date().getFullYear();
+        const daysInMonth = new Date(currentYear, selectedMonth, 0).getDate();
+        
+        const today = new Date();
+        const isCurrentMonth = (today.getFullYear() === currentYear && (today.getMonth() + 1) === selectedMonth);
+
+        let headerHtml = `<th class="adm-sticky-id" style="min-width:62px;">আইডি</th><th class="adm-sticky-name" style="min-width:90px;">নাম</th>`;
+        for (let i = 1; i <= daysInMonth; i++) {
+            const tempDate = new Date(currentYear, selectedMonth - 1, i);
+            const dayName = banglaDays[tempDate.getDay()];
+            const isTodayColumn = (isCurrentMonth && today.getDate() === i) ? 'class="today-highlight"' : '';
+            headerHtml += `<th ${isTodayColumn} style="min-width: 95px;">${i}<span class="day-subtext">${dayName}</span></th>`;
+        }
+        headerHtml += `<th style="background-color: #e6f4ea; min-width: 40px;">P</th>`;
+        headerHtml += `<th style="background-color: #fce8e6; min-width: 40px;">A</th>`;
+        headerHtml += `<th style="background-color: #e8f0fe; min-width: 95px;">💰 বেতন<span class="day-subtext">(টাকা লিখুন)</span></th>`;
+        headerHtml += `<th style="background-color: #fffbea; min-width: 90px;">⏱️ লেট<span class="day-subtext">(মি. / টাকা)</span></th>`;
+        headerHtml += `<th style="background-color: #eef4ff; min-width: 90px;">🏃 আর্লি<span class="day-subtext">(মি. / টাকা)</span></th>`;
+        headerHtml += `<th style="background-color: #fce8e6; min-width: 80px;">✂️ কাটা<span class="day-subtext">(হিসাব)</span></th>`;
+        headerHtml += `<th style="background-color: #e6f4ea; min-width: 80px;">✅ নেট বেতন</th>`;
+        tableHeaderRow.innerHTML = headerHtml;
+    }
+
+    function renderSheetDashboard(logs) {
+        if (document.getElementById('adminDashboard').style.display !== 'block') return;
+        
+        sheetTableBody.innerHTML = '';
+        // সারসংক্ষেপ বক্সের জন্য মাসিক মোট
+        let summaryLateMins = 0, summaryLateDeduct = 0;
+        let summaryEarlyMins = 0, summaryEarlyDeduct = 0;
+        let lateBreakLines = [], earlyBreakLines = [];
+        const selectedMonth = parseInt(monthFilter.value);
+        const currentYear = new Date().getFullYear();
+        const daysInMonth = new Date(currentYear, selectedMonth, 0).getDate();
+        const today = new Date();
+        const isCurrentMonth = (today.getFullYear() === currentYear && (today.getMonth() + 1) === selectedMonth);
+
+        Object.keys(employeeDatabase).forEach(empId => {
+            const empName = employeeDatabase[empId];
+            const empLogs = logs.filter(log => {
+                if (log.id !== empId) return false;
+                let m = null;
+                if (log.rawDate) m = new Date(log.rawDate).getMonth() + 1;
+                return m === selectedMonth;
+            });
+
+            let monthDaysData = {};
+            empLogs.forEach(log => {
+                if (log.rawDate) {
+                    const dateDay = new Date(log.rawDate).getDate();
+                    monthDaysData[dateDay] = log;
+                }
+            });
+
+            let daysHtml = ''; let pCount = 0; let aCount = 0; let lateCount = 0;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const isTodayCell = (isCurrentMonth && today.getDate() === d) ? 'class="today-highlight"' : '';
+
+                if (monthDaysData[d]) {
+                    const logData = monthDaysData[d];
+                    const status = logData.status;
+                    const key = logData.fbKey;
+                    
+                    if (status !== 'Absent') {
+                        pCount++;
+                        if (status === 'Late') lateCount++;
+                        let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late';
+                        let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa; font-size:9px;">No Exit</span>`;
+                        
+                        daysHtml += `<td ${isTodayCell}>
+                            <div class="time-box-container">
+                                <span style="color:#137333;font-weight:bold;font-size:11px;">P</span>
+                                <span class="${inTimeClass}">In: ${logData.time}</span>
+                                ${outHtml}
+                            </div>
+                            <button class="btn-delete" onclick="deleteRecord('${key}')">×</button>
+                        </td>`;
+                    } else {
+                        aCount++;
+                        daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`;
+                    }
+                } else {
+                    // কোনো রেকর্ড নেই — ঘর খালি রাখো (A দেখানো হবে না)
+                    daysHtml += `<td ${isTodayCell}></td>`;
+                }
+            }
+
+            const row = document.createElement('tr');
+
+            // বেতন লোড করো localStorage থেকে
+            const salaryKey = `salary_${empId}_${selectedMonth}_${currentYear}`;
+            const savedSalary = localStorage.getItem(salaryKey) || '';
+
+            // বেতন কাটার হিসাব
+            const baseSalary = parseFloat(savedSalary) || 0;
+            const totalDaysInMonth = daysInMonth;
+            const perDayRate = baseSalary / totalDaysInMonth;
+            const perMinuteRate = baseSalary / (totalDaysInMonth * 9 * 60);
+
+            // Absent কাটা: প্রতিটি Absent দিনের জন্য দৈনিক হার কাটা
+            const absentDeduction = aCount * perDayRate;
+
+            // অফিস শুরু ও শেষ সময় settings থেকে নেওয়া
+            const appSett = getAppSettings();
+            const [offStartH, offStartM] = (appSett.startTime || '11:00').split(':').map(Number);
+            const [offEndH,   offEndM]   = (appSett.endTime   || '20:00').split(':').map(Number);
+            const officeStartTotalMin = offStartH * 60 + offStartM;
+            const officeEndTotalMin   = offEndH   * 60 + offEndM;
+
+            // লেট: log.time (12h format) ব্যবহার করে exact minute হিসাব
+            let totalLateMinutes = 0;
+            empLogs.forEach(log => {
+                if (!log.time || log.status === 'Absent') return;
+                const entryTotalMin = parseTime12hToMinutes(log.time);
+                if (entryTotalMin === null) return;
+                const lateMin = entryTotalMin - officeStartTotalMin;
+                if (lateMin > 0) totalLateMinutes += lateMin;
+            });
+            const lateDeduction = totalLateMinutes * perMinuteRate;
+
+            // আর্লি এক্সিট: log.exitTime থেকে exact minute হিসাব
+            let totalEarlyExitMinutes = 0;
+            empLogs.forEach(log => {
+                if (!log.exitTime || log.exitTime.trim() === '') return;
+                const exitMins = parseTime12hToMinutes(log.exitTime);
+                if (exitMins === null) return;
+                const earlyMin = officeEndTotalMin - exitMins;
+                if (earlyMin > 0) totalEarlyExitMinutes += earlyMin;
+            });
+            const earlyExitDeduction = totalEarlyExitMinutes * perMinuteRate;
+
+            const totalDeduction = absentDeduction + lateDeduction + earlyExitDeduction;
+            const netSalary = baseSalary - totalDeduction;
+
+            const deductHtml = baseSalary > 0
+                ? `<div class="deduct-badge">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div>
+                   <div class="deduct-detail">অনুপস্থিত: ৳${Math.round(absentDeduction).toLocaleString('bn-BD')}</div>
+                   <div class="deduct-detail">লেট (${totalLateMinutes} মি.): ৳${Math.round(lateDeduction).toLocaleString('bn-BD')}</div>
+                   <div class="deduct-detail">আর্লি (${totalEarlyExitMinutes} মি.): ৳${Math.round(earlyExitDeduction).toLocaleString('bn-BD')}</div>`
+                : `<span style="color:#ccc; font-size:10px;">—</span>`;
+
+            const netHtml = baseSalary > 0
+                ? `<div class="net-badge">৳${Math.round(netSalary).toLocaleString('bn-BD')}</div>`
+                : `<span style="color:#ccc; font-size:10px;">—</span>`;
+
+            row.innerHTML = `<td class="meta-cell adm-sticky-id">${empId}</td><td class="meta-cell adm-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}
+                <td><span class="summary-badge-p">${pCount}</span></td>
+                <td><span class="summary-badge-a">${aCount}</span></td>
+                <td class="salary-input-cell">
+                    <input type="number" class="salary-input" id="sal_${empId}" value="${savedSalary}" placeholder="০" min="0"
+                        onchange="saveSalary('${empId}', ${selectedMonth}, ${currentYear}, this.value)"
+                        oninput="saveSalary('${empId}', ${selectedMonth}, ${currentYear}, this.value)">
+                </td>
+                <td style="background:#fffbea;text-align:center;min-width:90px;">
+                    <div style="font-size:13px;font-weight:800;color:#92400e;">${totalLateMinutes > 0 ? totalLateMinutes + ' মি.' : '—'}</div>
+                    <div style="font-size:11px;color:#c5221f;">${baseSalary > 0 && totalLateMinutes > 0 ? '৳' + Math.round(lateDeduction).toLocaleString('bn-BD') : ''}</div>
+                </td>
+                <td style="background:#eef4ff;text-align:center;min-width:90px;">
+                    <div style="font-size:13px;font-weight:800;color:#1e3a8a;">${totalEarlyExitMinutes > 0 ? totalEarlyExitMinutes + ' মি.' : '—'}</div>
+                    <div style="font-size:11px;color:#c5221f;">${baseSalary > 0 && totalEarlyExitMinutes > 0 ? '৳' + Math.round(earlyExitDeduction).toLocaleString('bn-BD') : ''}</div>
+                </td>
+                <td class="salary-deduct-cell">${deductHtml}</td>
+                <td class="salary-net-cell">${netHtml}</td>`;
+            sheetTableBody.appendChild(row);
+
+            // সারসংক্ষেপ বক্সে যোগ করো
+            summaryLateMins   += totalLateMinutes;
+            summaryLateDeduct += baseSalary > 0 ? Math.round(lateDeduction) : 0;
+            summaryEarlyMins  += totalEarlyExitMinutes;
+            summaryEarlyDeduct += baseSalary > 0 ? Math.round(earlyExitDeduction) : 0;
+            if (totalLateMinutes > 0)
+                lateBreakLines.push(empName + ': ' + totalLateMinutes + ' মিনিট → ৳' + (baseSalary > 0 ? Math.round(lateDeduction).toLocaleString('bn-BD') : 'বেতন নেই'));
+            if (totalEarlyExitMinutes > 0)
+                earlyBreakLines.push(empName + ': ' + totalEarlyExitMinutes + ' মিনিট → ৳' + (baseSalary > 0 ? Math.round(earlyExitDeduction).toLocaleString('bn-BD') : 'বেতন নেই'));
+        });
+        // সারসংক্ষেপ বক্স আপডেট
+        const lbMin = document.getElementById('lateTotalMin');
+        const lbDeduct = document.getElementById('lateTotalDeduct');
+        const lbBreak = document.getElementById('lateEmpBreakdown');
+        const ebMin = document.getElementById('earlyTotalMin');
+        const ebDeduct = document.getElementById('earlyTotalDeduct');
+        const ebBreak = document.getElementById('earlyEmpBreakdown');
+        if (lbMin) lbMin.textContent = summaryLateMins;
+        if (lbDeduct) lbDeduct.textContent = '৳' + summaryLateDeduct.toLocaleString('bn-BD');
+        if (lbBreak) lbBreak.innerHTML = lateBreakLines.length
+            ? lateBreakLines.map(l => '<div style="padding:2px 0;border-bottom:1px dashed #fde68a;">' + l + '</div>').join('')
+            : '<div style="color:#aaa;font-style:italic;">এই মাসে কেউ লেট নেই</div>';
+        if (ebMin) ebMin.textContent = summaryEarlyMins;
+        if (ebDeduct) ebDeduct.textContent = '৳' + summaryEarlyDeduct.toLocaleString('bn-BD');
+        if (ebBreak) ebBreak.innerHTML = earlyBreakLines.length
+            ? earlyBreakLines.map(l => '<div style="padding:2px 0;border-bottom:1px dashed #bfdbfe;">' + l + '</div>').join('')
+            : '<div style="color:#aaa;font-style:italic;">এই মাসে কেউ আগে বের হয়নি</div>';
+
+        // মাস ফিল্টারে কোনো ডেটা না থাকলে খালি টেবিল বার্তা
+        if (sheetTableBody.querySelectorAll('tr').length === 0) {
+            const emptyRow = document.createElement('tr');
+            const cols = document.getElementById('tableHeaderRow').querySelectorAll('th').length || 8;
+            emptyRow.innerHTML = `<td colspan="${cols}" class="lr-empty" style="padding:24px;text-align:center;">এই মাসে কোনো হাজিরা ডেটা নেই।</td>`;
+            sheetTableBody.appendChild(emptyRow);
+        }
+    }
+
+    function renderDeviceDashboard() {
+        if (document.getElementById('adminDashboard').style.display !== 'block') return;
+        deviceTableBody.innerHTML = '';
+        
+        Object.keys(employeeDatabase).forEach(empId => {
+            const empName = employeeDatabase[empId];
+            const hasDevice = globalDevices[empId];
+            
+            let statusText = hasDevice ? `<span style="color:#137333; font-weight:bold;">🔒 লকড (Device Bound)</span>` : `<span style="color:#b06000;">🔓 আনলকড (নতুন ফোনে এড হবে)</span>`;
+            let actionBtn = hasDevice ? `<button class="btn-reset-dev" onclick="resetEmployeeDevice('${empId}')">Reset Device</button>` : `<button class="btn-reset-dev" disabled style="background:#eee; color:#aaa; border-color:#aaa; cursor:not-allowed;">No Active Device</button>`;
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><b>${empId}</b></td><td style="color:#1a73e8; font-weight:bold;">${empName}</td><td>${statusText}</td><td>${actionBtn}</td>`;
+            deviceTableBody.appendChild(tr);
+        });
+    }
+
+    window.resetEmployeeDevice = function(empId) {
+        if (confirm(`${employeeDatabase[empId]}-এর ডিভাইস লক রিসেট করতে চান?`)) {
+            db.ref(`registeredDevices/${empId}`).remove().then(() => {
+                alert("ডিভাইস সফলভাবে রিসেট হয়েছে!");
+            });
+        }
+    }
+
+    db.ref('attendanceLogs').on('value', (snapshot) => {
+        const data = snapshot.val(); globalAttendanceLogs = [];
+        if (data) {
+            Object.keys(data).forEach(key => { let item = data[key]; item.fbKey = key; globalAttendanceLogs.push(item); });
+        }
+        generateTableHeader(); renderSheetDashboard(globalAttendanceLogs);
+        generatePublicTableHeader(); renderPublicSheetDashboard(globalAttendanceLogs);
+    });
+
+    db.ref('registeredDevices').on('value', (snapshot) => {
+        globalDevices = snapshot.val() || {};
+        renderDeviceDashboard();
+    });
+
+    monthFilter.addEventListener('change', () => { generateTableHeader(); renderSheetDashboard(globalAttendanceLogs); });
+
+    function getCustomBanglaDateTime(manualDateStr = null, manualTimeStr = null) {
+        const now = manualDateStr ? new Date(manualDateStr + 'T' + (manualTimeStr || '00:00')) : new Date();
+        const customDays = ['রবি বার', 'সোম বার', 'মঙ্গল বার', 'বুধ বার', 'বৃহস্পতি বার', 'শুক্র বার', 'শনি বার'];
+        
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        minutes = minutes < 10 ? '0'+minutes : minutes;
+        let strTime = (hours < 10 ? '0'+hours : hours) + ':' + minutes + ' ' + ampm;
+
+        return { 
+            fullDate: `${customDays[now.getDay()]}, ${now.getDate()} তারিখ ${now.getMonth() + 1} মাস ${now.getFullYear().toString().slice(-2)}`, 
+            time: strTime, 
+            rawObj: now 
+        };
+    }
+
+    function formatManualTime12Hour(timeStr) {
+        if(!timeStr) return "";
+        const parts = timeStr.split(':');
+        let hours = parseInt(parts[0]);
+        let minutes = parseInt(parts[1]);
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return (hours < 10 ? '0'+hours : hours) + ':' + (minutes < 10 ? '0'+minutes : minutes) + ' ' + ampm;
+    }
+
+    window.deleteRecord = function(key) { if (confirm("তথ্য টি মুছে ফেলতে চান?")) db.ref(`attendanceLogs/${key}`).remove(); }
+
+    document.getElementById('manualSubmitBtn').addEventListener('click', () => {
+        const mId = document.getElementById('manualEmpId').value; 
+        const mStatus = document.getElementById('manualStatus').value;
+        const mDate = document.getElementById('manualDate').value; 
+        const mEntryTime = document.getElementById('manualEntryTime').value;
+        const mExitTime = document.getElementById('manualExitTime').value;
+        
+        if (!mId || !mDate) { alert("সঠিক তথ্য দিন!"); return; }
+        
+        const dtObj = getCustomBanglaDateTime(mDate, mEntryTime);
+        const formattedExit = mExitTime ? formatManualTime12Hour(mExitTime) : "";
+
+        db.ref('attendanceLogs').push().set({ 
+            rawDate: dtObj.rawObj.toISOString(), 
+            date: dtObj.fullDate, 
+            id: mId, 
+            name: employeeDatabase[mId], 
+            time: dtObj.time, 
+            exitTime: formattedExit, 
+            status: mStatus 
+        });
+        alert(`তথ্য সফলভাবে যুক্ত হয়েছে।`);
+    });
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; const p1 = lat1 * Math.PI / 180; const p2 = lat2 * Math.PI / 180;
+        const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
+        return R * (2 * Math.atan2(Math.sqrt(Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2)), Math.sqrt(1-(Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2))))); 
+    }
+
+    function sendTelegramNotification(empId, empName, distance, timeNow, dateNow, status, isExit = false) {
+        let textMsg = `🔔 *হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📊 স্ট্যাটাস: ${status === 'Present' ? '✅ উপস্থিত (Entry)' : (status === 'Late' ? '⚠️ লেট (Entry)' : '❌ অনুপস্থিত')}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+        if(isExit) {
+            textMsg = `🚪 *অফিস এক্সিট (Exit) অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ বের হওয়ার সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+        }
+        fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: textMsg, parse_mode: 'Markdown' })
+        });
+    }
+
+    // ══════════════════════════════════════════
+    // ক্লিক সীমা: ২৪ ঘন্টায় সর্বোচ্চ ২ বার (localStorage)
+    // ══════════════════════════════════════════
+    const CLICK_LIMIT_KEY = 'att_click_log';
+
+    function getTodayClickKey() {
+        const d = new Date();
+        return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+    }
+    // mode = 'entry' বা 'exit' — আলাদাভাবে ট্র্যাক করা হয়
+    function getClickCount(empId, mode) {
+        try {
+            const data = JSON.parse(localStorage.getItem(CLICK_LIMIT_KEY) || '{}');
+            const key = empId + '_' + mode + '_' + getTodayClickKey();
+            return data[key] || 0;
+        } catch(e) { return 0; }
+    }
+    function incrementClickCount(empId, mode) {
+        try {
+            const data = JSON.parse(localStorage.getItem(CLICK_LIMIT_KEY) || '{}');
+            const key = empId + '_' + mode + '_' + getTodayClickKey();
+            data[key] = (data[key] || 0) + 1;
+            const today = getTodayClickKey();
+            Object.keys(data).forEach(function(k) { if (k.indexOf('_' + today) === -1) delete data[k]; });
+            localStorage.setItem(CLICK_LIMIT_KEY, JSON.stringify(data));
+        } catch(e) {}
+    }
+    // বর্তমান সময়ের মোড নির্ণয় (entry/exit/closed)
+    function getCurrentMode() {
+        const now = new Date();
+        const totalMin = now.getHours() * 60 + now.getMinutes();
+        if (totalMin >= 9*60 && totalMin < 19*60+50)  return 'entry';
+        if (totalMin >= 19*60+50 && totalMin < 20*60) return 'exit';
+        return 'closed';
+    }
+
+    // ══════════════════════════════════════════
+    // লাইভ GPS কার্ড (watchPosition)
+    // ══════════════════════════════════════════
+    let gpsWatchId = null;
+    let lastKnownDistance = null;
+    let gpsFailCount = 0;
+    const GPS_FAIL_LIMIT = 5;
+
+    function updateGpsCard(payload, state) {
+        const card     = document.getElementById('gpsLiveCard');
+        const statusEl = document.getElementById('gpsLiveStatus');
+        const mRow     = document.getElementById('gpsMetersRow');
+        const distEl   = document.getElementById('gpsDistanceVal');
+        const radEl    = document.getElementById('gpsRadiusVal');
+        const warnEl   = document.getElementById('gpsWarnText');
+        const sigEl    = document.getElementById('gpsSignalLost');
+        if (!card) return;
+        card.className = 'gps-live-card';
+        warnEl.style.display = 'none';
+        sigEl.style.display  = 'none';
+        mRow.style.display   = 'none';
+        if (state === 'loading') {
+            statusEl.innerHTML = '<span class="gps-spinner"><span class="gps-spin-icon"></span> লোকেশন যাচাই করা হচ্ছে...</span>';
+        } else if (state === 'inside') {
+            card.classList.add('gps-inside');
+            statusEl.innerHTML = '<span class="pulse-dot"><span></span><i></i></span>&nbsp; অফিসের ভেতরে আছেন ✅';
+            mRow.style.display = 'grid';
+            distEl.textContent = Math.round(payload);
+            radEl.textContent  = getAllowedRadius();
+        } else if (state === 'outside') {
+            card.classList.add('gps-outside');
+            statusEl.innerHTML = '<span class="pulse-dot"><span></span><i></i></span>&nbsp; অফিস এলাকার বাইরে ❌';
+            mRow.style.display  = 'grid';
+            distEl.textContent  = Math.round(payload);
+            radEl.textContent   = getAllowedRadius();
+            warnEl.style.display = 'block';
+        } else if (state === 'signal-lost') {
+            card.classList.add('gps-error');
+            if (lastKnownDistance !== null) {
+                statusEl.innerHTML = '⚠️ GPS সিগন্যাল দুর্বল (সর্বশেষ দূরত্ব)';
+                mRow.style.display = 'grid';
+                distEl.textContent = Math.round(lastKnownDistance);
+                radEl.textContent  = getAllowedRadius();
+            } else {
+                statusEl.innerHTML = '⚠️ GPS সিগন্যাল হারিয়ে গেছে';
+            }
+            sigEl.style.display = 'block';
+        } else if (state === 'error') {
+            card.classList.add('gps-error');
+            statusEl.textContent = '⚠️ ' + payload;
+        }
+    }
+
+    // ══════════════════════════════════════════
+    // ডায়নামিক Entry/Exit বাটন + অফিস সময় প্রদর্শন
+    // Entry: ৯:০০ – ১৯:৪৯ | Exit: ১৯:৫০ – ২০:০০
+    // অফিস সময়: ১০:৩০ – ২০:০০
+    // ══════════════════════════════════════════
+    function updateAttendanceButton() {
+        const now = new Date();
+        const h = now.getHours(), m = now.getMinutes();
+        const totalMin = h * 60 + m;
+
+        const ENTRY_START  = 9  * 60;        // 9:00 AM
+        const EXIT_START   = 19 * 60 + 50;   // 7:50 PM
+        const OFFICE_END   = 20 * 60;         // 8:00 PM
+        const OFFICE_START = 10 * 60 + 30;   // 10:30 AM
+
+        const btn     = document.getElementById('submitBtn');
+        const closedMsg = document.getElementById('officeClosedMsg');
+        const statusEl = document.getElementById('officeTimeStatus');
+
+        if (!btn) return;
+
+        if (totalMin < ENTRY_START) {
+            // সকাল ৯টার আগে
+            btn.style.display = 'none';
+            closedMsg.style.display = 'block';
+            closedMsg.innerHTML = '⏳ অফিস শুরু হয়নি। Entry সময়: সকাল ৯:০০ থেকে।';
+            if (statusEl) { statusEl.textContent = 'অফিস শুরু হয়নি'; statusEl.style.color = '#b06000'; }
+        } else if (totalMin < EXIT_START) {
+            // Entry সময় (৯:০০ – ১৯:৪৯)
+            btn.style.display = 'block';
+            btn.textContent   = '✅ হাজিরা Entry দিন';
+            btn.style.background = '#137333';
+            btn.dataset.mode  = 'entry';
+            closedMsg.style.display = 'none';
+            if (statusEl) {
+                if (totalMin < OFFICE_START) {
+                    statusEl.textContent = 'অফিস শুরু হয়নি (Entry খোলা)';
+                    statusEl.style.color = '#b06000';
+                } else {
+                    statusEl.textContent = 'অফিস চলছে ✅';
+                    statusEl.style.color = '#137333';
+                }
+            }
+        } else if (totalMin < OFFICE_END) {
+            // Exit সময় (১৯:৫০ – ২০:০০)
+            btn.style.display = 'block';
+            btn.textContent   = '🚪 হাজিরা Exit দিন';
+            btn.style.background = '#c5221f';
+            btn.dataset.mode  = 'exit';
+            closedMsg.style.display = 'none';
+            if (statusEl) { statusEl.textContent = 'Exit সময় 🚪'; statusEl.style.color = '#c5221f'; }
+        } else {
+            // অফিস শেষ (রাত ৮টার পর)
+            btn.style.display = 'none';
+            closedMsg.style.display = 'block';
+            closedMsg.innerHTML = '🔒 অফিস সময় শেষ। আজকের হাজিরা নেওয়া হচ্ছে না।';
+            if (statusEl) { statusEl.textContent = 'অফিস বন্ধ 🔒'; statusEl.style.color = '#c5221f'; }
+        }
+    }
+
+    // প্রতি মিনিটে বাটন আপডেট
+    updateAttendanceButton();
+    setInterval(updateAttendanceButton, 60000);
+
+    // ══ স্মার্ট হাজিরা কার্ডে অফিস সেটিংস দেখাও ══
+    function updateCardFromSettings() {
+        const s = getAppSettings();
+        const g = getAppGpsSettings();
+
+        // সময় ফরম্যাট: "11:00" → "সকাল ১১:০০"
+        function fmtTime(t) {
+            if (!t) return '—';
+            const [hStr, mStr] = t.split(':');
+            const h = parseInt(hStr), m = parseInt(mStr);
+            const ampm = h >= 12 ? 'রাত' : 'সকাল';
+            const h12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            const pad = n => String(n).padStart(2, '০');
+            return ampm + ' ' + pad(h12) + ':' + pad(m);
+        }
+
+        const startEl = document.getElementById('cardOfficeStart');
+        const endEl   = document.getElementById('cardOfficeEnd');
+        if (startEl) startEl.textContent = fmtTime(s.startTime);
+        if (endEl)   endEl.textContent   = fmtTime(s.endTime);
+
+        // GPS radius in live card (if visible)
+        const radiusEl = document.getElementById('gpsRadiusVal');
+        if (radiusEl && radiusEl.textContent === '--') radiusEl.textContent = g.radius;
+    }
+    updateCardFromSettings();
+
+    // সেটিংস সেভ হলে কার্ড আপডেট করো
+    const origSaveOfficeSettings = window.saveOfficeSettings;
+    window.saveOfficeSettings = function() {
+        origSaveOfficeSettings();
+        updateCardFromSettings();
+        updateAttendanceButton();
+    };
+
+    function startGpsWatch() {
+        if (!navigator.geolocation) {
+            updateGpsCard('এই ডিভাইসে GPS সাপোর্ট নেই', 'error');
+            return;
+        }
+        if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId);
+        gpsFailCount = 0;
+        updateGpsCard(null, 'loading');
+        gpsWatchId = navigator.geolocation.watchPosition(
+            function(pos) {
+                gpsFailCount = 0;
+                const dist = getDistance(getOfficeLat(), getOfficeLng(),
+                    pos.coords.latitude, pos.coords.longitude);
+                lastKnownDistance = dist;
+                updateGpsCard(dist, dist <= getAllowedRadius() ? 'inside' : 'outside');
+            },
+            function(err) {
+                gpsFailCount++;
+                if (err.code === err.PERMISSION_DENIED) {
+                    navigator.geolocation.clearWatch(gpsWatchId);
+                    gpsWatchId = null;
+                    updateGpsCard('লোকেশন পারমিশন দেওয়া হয়নি। ব্রাউজার সেটিংস থেকে পারমিশন দিন।', 'error');
+                    return;
+                }
+                if (gpsFailCount >= GPS_FAIL_LIMIT) {
+                    navigator.geolocation.clearWatch(gpsWatchId);
+                    gpsWatchId = null;
+                    updateGpsCard('GPS সিগন্যাল পাওয়া যাচ্ছে না। ডিভাইসের GPS চালু আছে কিনা দেখুন।', 'error');
+                } else {
+                    updateGpsCard(null, 'signal-lost');
+                }
+            },
+            { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+        );
+    }
+
+    function handleAttendanceCheckIn() {
+        const empId = document.getElementById('employeeId').value.trim();
+
+        // বৈধতা: খালি ID
+        if (!empId) {
+            showBox('❌ কর্মচারী আইডি খালি রাখা যাবে না!', 'error');
+            return;
+        }
+        // বৈধতা: ভুল / অচেনা ID
+        if (!employeeDatabase[empId]) {
+            showBox('❌ এই আইডি সিস্টেমে নেই। সঠিক আইডি দিন।', 'error');
+            return;
+        }
+        // অফিস সময় চেক (১২ ঘন্টার সেশন: ১০:৩০ - ২০:০০)
+        const currentMode = getCurrentMode();
+        if (currentMode === 'closed') {
+            showBox('🔒 এখন অফিস সময়ের বাইরে। হাজিরা দেওয়া যাবে না।', 'error');
+            return;
+        }
+        // মোড-ভিত্তিক ক্লিক সীমা: Entry ১ বার, Exit ১ বার
+        if (getClickCount(empId, currentMode) >= 1) {
+            document.getElementById('clickLimitAlert').style.display = 'block';
+            const modeText = currentMode === 'entry' ? 'Entry' : 'Exit';
+            showBox('⛔ আপনি আজ ' + modeText + ' হাজিরা ইতিমধ্যে দিয়েছেন।', 'error');
+            return;
+        }
+
+        const currentDeviceId = getLocalDeviceId();
+        submitBtn.disabled = true;
+        showBox('ডাটাবেজ ও সিকিউরিটি চেক করা হচ্ছে...', 'loading');
+
+        const todayObj     = new Date();
+        const currentDay   = todayObj.getDate();
+        const currentMonth = todayObj.getMonth() + 1;
+        const currentYear  = todayObj.getFullYear();
+
+        // আজকের এই কর্মচারীর রেকর্ড
+        const userTodayRecords = globalAttendanceLogs.filter(function(log) {
+            if (log.id !== empId || !log.rawDate) return false;
+            const d = new Date(log.rawDate);
+            return d.getDate() === currentDay &&
+                   (d.getMonth() + 1) === currentMonth &&
+                   d.getFullYear() === currentYear;
+        });
+
+        db.ref('registeredDevices/' + empId).once('value', function(snapshot) {
+            const registeredDeviceId = snapshot.val();
+
+            if (registeredDeviceId && registeredDeviceId !== currentDeviceId) {
+                showBox('❌ ডিভাইস সিকিউরিটি অ্যালার্ট! আপনার নিজের ফোন থেকে হাজিরা দিন।', 'error');
+                submitBtn.disabled = false;
+                return;
+            }
+
+            showBox('লোকেশন ভেরিফাই করা হচ্ছে...', 'loading');
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const distance = getDistance(getOfficeLat(), getOfficeLng(),
+                        position.coords.latitude, position.coords.longitude);
+
+                    // অফিস রেডিয়াসের বাইরে
+                    if (distance > getAllowedRadius()) {
+                        showBox('❌ আপনি অফিস এলাকার বাহিরে আছেন। হাজিরা দেওয়া সম্ভব নয়।', 'error');
+                        submitBtn.disabled = false;
+                        return;
+                    }
+
+                    const dt = getCustomBanglaDateTime();
+
+                    // একই দিনে Entry আছে → Exit আপডেট
+                    // একই দিনে একাধিক Entry → শুধুমাত্র প্রথম Entry রেকর্ড ব্যবহার
+                    if (userTodayRecords.length > 0) {
+                        const mainRecord = userTodayRecords[0];
+                        if (mainRecord.status === 'Absent') {
+                            showBox('❌ আপনি আজ অলরেডি অনুপস্থিত (Absent) হিসেবে চিহ্নিত।', 'error');
+                            submitBtn.disabled = false;
+                            return;
+                        }
+                        // একই দিনে একাধিক Exit → প্রতিবার ওভাররাইট → সর্বশেষ Exit সংরক্ষিত থাকে
+                        db.ref('attendanceLogs/' + mainRecord.fbKey).update({ exitTime: dt.time })
+                        .then(function() {
+                            incrementClickCount(empId, 'exit');
+                            sendTelegramNotification(empId, employeeDatabase[empId], distance,
+                                dt.time, dt.fullDate, mainRecord.status, true);
+                            showBox('🚪 এক্সিট সফল! বের হওয়ার সময়: ' + dt.time, 'success');
+                            submitBtn.disabled = false;
+                        }).catch(function() {
+                            showBox('❌ ডাটাবেজ আপডেট এরর! আবার চেষ্টা করুন।', 'error');
+                            submitBtn.disabled = false;
+                        });
+                        return;
+                    }
+
+                    // নতুন Entry (একই দিনে প্রথম)
+                    if (dt.rawObj.getHours() >= 20) {
+                        showBox('❌ অফিস সময় শেষ! আর হাজিরা নেওয়া সম্ভব নয়।', 'error');
+                        db.ref('attendanceLogs').push().set({
+                            rawDate: dt.rawObj.toISOString(), date: dt.fullDate,
+                            id: empId, name: employeeDatabase[empId],
+                            time: dt.time, exitTime: '', status: 'Absent'
+                        });
+                        submitBtn.disabled = false;
+                        return;
+                    }
+
+                    if (!registeredDeviceId) db.ref('registeredDevices/' + empId).set(currentDeviceId);
+
+                    let finalStatus = 'Present';
+                    const h = dt.rawObj.getHours(), m = dt.rawObj.getMinutes();
+                    if (h > 11 || (h === 11 && m > 0)) finalStatus = 'Late';
+
+                    db.ref('attendanceLogs').push().set({
+                        rawDate: dt.rawObj.toISOString(), date: dt.fullDate,
+                        id: empId, name: employeeDatabase[empId],
+                        time: dt.time, exitTime: '', status: finalStatus
+                    }).then(function() {
+                        incrementClickCount(empId, 'entry');
+                        sendTelegramNotification(empId, employeeDatabase[empId], distance,
+                            dt.time, dt.fullDate, finalStatus, false);
+                        showBox('✅ হাজিরা (Entry) সফল! সময়: ' + dt.time, 'success');
+                        submitBtn.disabled = false;
+                    }).catch(function() {
+                        showBox('❌ ডাটাবেজ সেভ এরর! আবার চেষ্টা করুন।', 'error');
+                        submitBtn.disabled = false;
+                    });
+                },
+                function(error) {
+                    submitBtn.disabled = false;
+                    if (error.code === error.PERMISSION_DENIED) {
+                        showBox('❌ লোকেশন পারমিশন দেওয়া হয়নি। ব্রাউজার সেটিংস থেকে পারমিশন দিয়ে আবার চেষ্টা করুন।', 'error');
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        showBox('❌ GPS লোকেশন সংগ্রহ ব্যর্থ হয়েছে। ডিভাইসের GPS চালু আছে কিনা দেখুন।', 'error');
+                    } else if (error.code === error.TIMEOUT) {
+                        showBox('❌ GPS টাইমআউট! নেটওয়ার্ক বা GPS সংকেত দুর্বল। আবার চেষ্টা করুন।', 'error');
+                    } else {
+                        showBox('❌ GPS এরর হয়েছে। আবার চেষ্টা করুন।', 'error');
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+            );
+        });
+    }
+    submitBtn.addEventListener('click', (e) => { e.preventDefault(); handleAttendanceCheckIn(); });
+    submitBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleAttendanceCheckIn(); }, {passive: false});
+
+    downloadBtn.addEventListener('click', () => {
+        if (globalAttendanceLogs.length === 0) { alert("কোনো রেকর্ড নেই!"); return; }
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFআইডি,নাম,তারিখ,ইন টাইম,আউট টাইম,স্ট্যাটাস\n";
+        globalAttendanceLogs.forEach(log => { csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.exitTime || '-'}","${log.status}"\n`; });
+        const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Attendance_Sheet_Month_${monthFilter.value}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    });
+
+    // বেতন সেভ করো এবং টেবিল রিফ্রেশ করো
+    window.saveSalary = function(empId, month, year, value) {
+        const salaryKey = `salary_${empId}_${month}_${year}`;
+        localStorage.setItem(salaryKey, value || '');
+        clearTimeout(window._salaryRenderTimer);
+        window._salaryRenderTimer = setTimeout(() => {
+            generateTableHeader();
+            renderSheetDashboard(globalAttendanceLogs);
+            renderAdminLateReport(globalAttendanceLogs);
+            renderAdminEarlyExitReport(globalAttendanceLogs);
+            renderPublicSheetDashboard(globalAttendanceLogs);
+        }, 600);
+    };
+
+    function parseTime12hToMinutes(timeStr) {
+        if (!timeStr || timeStr.trim() === '') return null;
+        const m = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (!m) return null;
+        let h = parseInt(m[1]), min = parseInt(m[2]);
+        const ampm = m[3].toUpperCase();
+        if (ampm === 'AM') { if (h === 12) h = 0; }
+        else { if (h !== 12) h += 12; }
+        return h * 60 + min;
+    }
+
+    function showBox(text, type) { msgBox.innerText = text; msgBox.className = type; msgBox.style.display = "block"; if (type !== "loading" && !text.includes("ডিভাইস")) submitBtn.disabled = false; }
+
+    // ===== পাবলিক রিড-অনলি ভিউ =====
+    const publicMonthFilter = document.getElementById('publicMonthFilter');
+    const publicTableHeaderRow = document.getElementById('publicTableHeaderRow');
+    const publicSheetTableBody = document.getElementById('publicSheetTableBody');
+
+    function setPublicCurrentMonth() {
+        publicMonthFilter.value = new Date().getMonth() + 1;
+    }
+    setPublicCurrentMonth();
+
+    function generatePublicTableHeader() {
+        const selectedMonth = parseInt(publicMonthFilter.value);
+        const currentYear = new Date().getFullYear();
+        const daysInMonth = new Date(currentYear, selectedMonth, 0).getDate();
+        const today = new Date();
+        const isCurrentMonth = (today.getFullYear() === currentYear && (today.getMonth() + 1) === selectedMonth);
+
+        let headerHtml = `<th class="pub-sticky-id" style="min-width:62px;">আইডি</th><th class="pub-sticky-name" style="min-width:90px;">নাম</th>`;
+        for (let i = 1; i <= daysInMonth; i++) {
+            const tempDate = new Date(currentYear, selectedMonth - 1, i);
+            const dayName = banglaDays[tempDate.getDay()];
+            const isTodayCol = (isCurrentMonth && today.getDate() === i) ? 'class="today-highlight"' : '';
+            headerHtml += `<th ${isTodayCol} style="min-width:95px;">${i}<span class="day-subtext">${dayName}</span></th>`;
+        }
+        headerHtml += `<th style="background-color:#e6f4ea; min-width:40px;">P</th>`;
+        headerHtml += `<th style="background-color:#fce8e6; min-width:40px;">A</th>`;
+        headerHtml += `<th style="background-color:#e8f0fe; min-width:80px;">💰 বেতন</th>`;
+        headerHtml += `<th style="background-color:#fff8e1; min-width:90px;">⏱️ লেট<span class="day-subtext">(মি. / টাকা)</span></th>`;
+        headerHtml += `<th style="background-color:#eef4ff; min-width:90px;">🏃 আর্লি<span class="day-subtext">(মি. / টাকা)</span></th>`;
+        headerHtml += `<th style="background-color:#fff4f4; min-width:80px;">✂️ কাটা</th>`;
+        headerHtml += `<th style="background-color:#e6f4ea; min-width:80px;">✅ নেট</th>`;
+        publicTableHeaderRow.innerHTML = headerHtml;
+    }
+
+    function renderPublicSheetDashboard(logs) {
+        publicSheetTableBody.innerHTML = '';
+        const selectedMonth = parseInt(publicMonthFilter.value);
+        const currentYear = new Date().getFullYear();
+        const daysInMonth = new Date(currentYear, selectedMonth, 0).getDate();
+        const today = new Date();
+        const isCurrentMonth = (today.getFullYear() === currentYear && (today.getMonth() + 1) === selectedMonth);
+
+        Object.keys(employeeDatabase).forEach(empId => {
+            const empName = employeeDatabase[empId];
+            const empLogs = logs.filter(log => {
+                if (log.id !== empId) return false;
+                if (!log.rawDate) return false;
+                return (new Date(log.rawDate).getMonth() + 1) === selectedMonth;
+            });
+
+            let monthDaysData = {};
+            empLogs.forEach(log => {
+                if (log.rawDate) {
+                    const dateDay = new Date(log.rawDate).getDate();
+                    monthDaysData[dateDay] = log;
+                }
+            });
+
+            let daysHtml = ''; let pCount = 0; let aCount = 0;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const isTodayCell = (isCurrentMonth && today.getDate() === d) ? 'class="today-highlight"' : '';
+                if (monthDaysData[d]) {
+                    const logData = monthDaysData[d];
+                    const status = logData.status;
+                    if (status !== 'Absent') {
+                        pCount++;
+                        let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late';
+                        let outHtml = logData.exitTime
+                            ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>`
+                            : `<span style="color:#aaa;font-size:9px;">No Exit</span>`;
+                        daysHtml += `<td ${isTodayCell}><div class="time-box-container"><span style="color:#137333;font-weight:bold;font-size:11px;">P</span><span class="${inTimeClass}">In: ${logData.time}</span>${outHtml}</div></td>`;
+                    } else {
+                        aCount++;
+                        daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span></td>`;
+                    }
+                } else {
+                    // কোনো রেকর্ড নেই — ঘর খালি রাখো (A দেখানো হবে না)
+                    daysHtml += `<td ${isTodayCell}></td>`;
+                }
+            }
+
+            const salaryKey = `salary_${empId}_${selectedMonth}_${currentYear}`;
+            const savedSalary = localStorage.getItem(salaryKey) || '';
+            const baseSalary = parseFloat(savedSalary) || 0;
+            const perDayRate = baseSalary / daysInMonth;
+            const perMinuteRate = baseSalary / (daysInMonth * 9 * 60);
+            const absentDeduction = aCount * perDayRate;
+
+            // অফিস শুরু ও শেষ settings থেকে
+            const pubSett = getAppSettings();
+            const [pubStartH, pubStartM] = (pubSett.startTime || '11:00').split(':').map(Number);
+            const [pubEndH,   pubEndM]   = (pubSett.endTime   || '20:00').split(':').map(Number);
+            const pubOfficeStartMin = pubStartH * 60 + pubStartM;
+            const pubOfficeEndMin   = pubEndH   * 60 + pubEndM;
+
+            // লেট: log.time (12h) ব্যবহার করে exact minute
+            let totalLateMinutes = 0;
+            empLogs.forEach(log => {
+                if (!log.time || log.status === 'Absent') return;
+                const entryMin = parseTime12hToMinutes(log.time);
+                if (entryMin === null) return;
+                const lateMin = entryMin - pubOfficeStartMin;
+                if (lateMin > 0) totalLateMinutes += lateMin;
+            });
+            const lateDeduction = totalLateMinutes * perMinuteRate;
+
+            // আর্লি এক্সিট: log.exitTime থেকে exact minute
+            let totalEarlyMinutes = 0;
+            empLogs.forEach(log => {
+                if (!log.exitTime || log.exitTime.trim() === '') return;
+                const exitMins = parseTime12hToMinutes(log.exitTime);
+                if (exitMins === null) return;
+                const em = pubOfficeEndMin - exitMins;
+                if (em > 0) totalEarlyMinutes += em;
+            });
+            const earlyDeduction = totalEarlyMinutes * perMinuteRate;
+            const totalDeduction = absentDeduction + lateDeduction + earlyDeduction;
+            const netSalary = baseSalary - totalDeduction;
+
+            const salaryHtml = baseSalary > 0 ? `৳${Math.round(baseSalary).toLocaleString('bn-BD')}` : `—`;
+            const pubLateHtml = totalLateMinutes > 0
+                ? `<div style="font-size:13px;font-weight:800;color:#92400e;">${totalLateMinutes} মি.</div><div style="font-size:11px;color:#c5221f;">${baseSalary > 0 ? '৳' + Math.round(lateDeduction).toLocaleString('bn-BD') : ''}</div>`
+                : `<span style="color:#ccc;font-size:10px;">—</span>`;
+            const pubEarlyHtml = totalEarlyMinutes > 0
+                ? `<div style="font-size:13px;font-weight:800;color:#1e3a8a;">${totalEarlyMinutes} মি.</div><div style="font-size:11px;color:#c5221f;">${baseSalary > 0 ? '৳' + Math.round(earlyDeduction).toLocaleString('bn-BD') : ''}</div>`
+                : `<span style="color:#ccc;font-size:10px;">—</span>`;
+            const deductHtml = baseSalary > 0 ? `-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}` : `—`;
+            const netHtml = baseSalary > 0 ? `৳${Math.round(netSalary).toLocaleString('bn-BD')}` : `—`;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `<td class="meta-cell pub-sticky-id">${empId}</td><td class="meta-cell pub-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}
+                <td><span class="summary-badge-p">${pCount}</span></td>
+                <td><span class="summary-badge-a">${aCount}</span></td>
+                <td class="pub-salary-cell">${salaryHtml}</td>
+                <td style="background:#fffbea;text-align:center;min-width:90px;">${pubLateHtml}</td>
+                <td style="background:#eef4ff;text-align:center;min-width:90px;">${pubEarlyHtml}</td>
+                <td class="pub-deduct-cell">${deductHtml}</td>
+                <td class="pub-net-cell">${netHtml}</td>`;
+            publicSheetTableBody.appendChild(row);
+        });
+    }
+
+    publicMonthFilter.addEventListener('change', () => {
+        generatePublicTableHeader();
+        renderPublicSheetDashboard(globalAttendanceLogs);
+    });
+
+    generatePublicTableHeader();
+    renderPublicSheetDashboard(globalAttendanceLogs);
+
+    // ══════════════════════════════════════════
+    // লাইভ ঘড়ি
+    // ══════════════════════════════════════════
+    const banglaDaysArr = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+    const banglaMonthsArr = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+
+    function updateLiveClock() {
+        const now = new Date();
+        const h24 = now.getHours();
+        const min = now.getMinutes();
+        const sec = now.getSeconds();
+        const ampm = h24 >= 12 ? 'PM' : 'AM';
+        const h12  = h24 % 12 || 12;
+        const pad  = n => String(n).padStart(2, '0');
+        const timeStr = pad(h12) + ':' + pad(min) + ':' + pad(sec) + ' ' + ampm;
+        const dayName = banglaDaysArr[now.getDay()];
+        const dateStr = dayName + ', ' + now.getDate() + ' ' + banglaMonthsArr[now.getMonth()] + ' ' + now.getFullYear();
+        const tEl = document.getElementById('clockTime');
+        const dEl = document.getElementById('clockDate');
+        if (tEl) tEl.textContent = timeStr;
+        if (dEl) dEl.textContent = dateStr;
+    }
+    updateLiveClock();
+    setInterval(updateLiveClock, 1000);
+
+</script>
+</body>
+</html>
+</html>
 
