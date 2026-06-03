@@ -155,11 +155,31 @@
         .btn-reset-dev:active { background-color: #ffe0b2; }
 
         /* বেতন সেকশন স্টাইল */
-        .salary-input-cell { min-width: 90px; background-color: #f0f7ff; }
+        .salary-input-cell { min-width: 140px; background-color: #f0f7ff; }
         .salary-input {
-            width: 80px; padding: 4px 6px; border: 1px solid #1a73e8; border-radius: 5px;
+            width: 90px; padding: 6px 8px; border: 1px solid #1a73e8; border-radius: 5px;
             font-size: 12px; font-weight: bold; color: #1a73e8; text-align: center;
             outline: none; background: white;
+        }
+        .salary-save-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 6px;
+            transition: 0.2s;
+        }
+        .salary-save-btn:active { background-color: #0d5bbd; }
+        .salary-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .salary-deduct-cell { background-color: #fff4f4; min-width: 80px; }
         .salary-net-cell { background-color: #f0faf0; min-width: 80px; }
@@ -358,7 +378,6 @@
 </head>
 <body>
 
-<!-- লাইভ ঘড়ি -->
 <div id="liveClock" style="background:#1a1f2e;color:#fff;border-radius:12px;padding:14px 24px;margin-bottom:14px;text-align:center;width:100%;max-width:380px;box-sizing:border-box;">
     <div style="font-size:13px;font-weight:700;color:#90caf9;margin-bottom:4px;">🗓️ অফিস হাজিরা সিস্টেম</div>
     <div id="clockTime" style="font-size:32px;font-weight:900;letter-spacing:2px;font-family:monospace;">00:00:00 AM</div>
@@ -369,18 +388,15 @@
     <h2>স্মার্ট হাজিরা</h2>
     <p class="info">Developed by সালমান</p>
 
-    <!-- অফিস সময় ইনফো (settings থেকে dynamic) -->
     <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#1b5e20;text-align:center;">
         🕐 অফিস সময়: <strong id="cardOfficeStart">—</strong> — <strong id="cardOfficeEnd">—</strong>
-        &nbsp;|&nbsp; <span id="officeTimeStatus" style="font-weight:700;"></span>
+         | <span id="officeTimeStatus" style="font-weight:700;"></span>
     </div>
 
-    <!-- ক্লিক সীমা সতর্কতা -->
     <div class="click-limit-alert" id="clickLimitAlert">
         ⛔ আপনি আজকের অফিস সেশনে ইতিমধ্যে ২ বার হাজিরা দিয়েছেন।
     </div>
 
-    <!-- লাইভ GPS কার্ড -->
     <div class="gps-live-card" id="gpsLiveCard">
         <div class="gps-live-top">
             <span class="gps-live-status" id="gpsLiveStatus">
@@ -411,7 +427,6 @@
 
     <input type="text" id="employeeId" class="emp-input" placeholder="আপনার আইডি (Employee ID) লিখুন">
 
-    <!-- ডায়নামিক বাটন: সময় অনুযায়ী Entry / Exit -->
     <button id="submitBtn" class="btn-submit" style="display:none;">হাজিরা Entry</button>
     <div id="officeClosedMsg" style="display:none;background:#f1f3f4;border-radius:8px;padding:10px;font-size:13px;color:#5f6368;text-align:center;margin-bottom:8px;"></div>
 
@@ -449,8 +464,6 @@
         </table>
     </div>
 </div>
-
-
 
 <div class="admin-login-card" id="adminLoginCard">
     <h3>অ্যাডমিন প্যানেল লগইন</h3>
@@ -539,11 +552,6 @@
         </div>
     </div>
 
-
-
-    <!-- ══════════════════════════════════════════
-         ⚙️ অফিস সেটিংস
-    ══════════════════════════════════════════ -->
     <div class="settings-container">
         <p class="settings-title">⚙️ অফিস সেটিংস</p>
         <div class="settings-row">
@@ -579,9 +587,6 @@
         <div id="pwd-msg" class="settings-msg"></div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         📍 GPS সেটিংস
-    ══════════════════════════════════════════ -->
     <div class="settings-container">
         <p class="settings-title">📍 GPS রেডিয়াস সেটিংস</p>
         <p style="font-size:13px; color:#5f6368; margin-bottom:14px; margin-top:-8px;">
@@ -607,7 +612,6 @@
         <button class="btn-settings-save" onclick="saveGpsSettings()">📍 GPS সেটিংস সংরক্ষণ</button>
         <div id="gps-settings-msg" class="settings-msg"></div>
     </div>
-
 </div>
 
 <script>
@@ -876,10 +880,10 @@
                                 ${outHtml}
                             </div>
                             <button class="btn-delete" onclick="deleteRecord('${key}')">×</button>
-                        </td>`;
+                         </td>`;
                     } else {
                         aCount++;
-                        daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`;
+                        daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span><button class="btn-delete" onclick="deleteRecord('${key}')">?</button></td>`;
                     }
                 } else {
                     // কোনো রেকর্ড নেই — ঘর খালি রাখো (A দেখানো হবে না)
@@ -949,9 +953,11 @@
                 <td><span class="summary-badge-p">${pCount}</span></td>
                 <td><span class="summary-badge-a">${aCount}</span></td>
                 <td class="salary-input-cell">
-                    <input type="number" class="salary-input" id="sal_${empId}" value="${savedSalary}" placeholder="০" min="0"
-                        onchange="saveSalary('${empId}', ${selectedMonth}, ${currentYear}, this.value)"
-                        oninput="saveSalary('${empId}', ${selectedMonth}, ${currentYear}, this.value)">
+                    <div class="salary-input-wrapper">
+                        <input type="number" class="salary-input" id="sal_${empId}" value="${savedSalary}" placeholder="বেতন" min="0" style="flex:1;">
+                        <button class="salary-save-btn" onclick="saveSalaryManually('${empId}', ${selectedMonth}, ${currentYear})">সংরক্ষণ</button>
+                    </div>
+                    <small style="font-size:9px; color:#666;">টাকা লিখে Save করুন</small>
                 </td>
                 <td style="background:#fffbea;text-align:center;min-width:90px;">
                     <div style="font-size:13px;font-weight:800;color:#92400e;">${totalLateMinutes > 0 ? totalLateMinutes + ' মি.' : '—'}</div>
@@ -971,9 +977,9 @@
             summaryEarlyMins  += totalEarlyExitMinutes;
             summaryEarlyDeduct += baseSalary > 0 ? Math.round(earlyExitDeduction) : 0;
             if (totalLateMinutes > 0)
-                lateBreakLines.push(empName + ': ' + totalLateMinutes + ' মিনিট → ৳' + (baseSalary > 0 ? Math.round(lateDeduction).toLocaleString('bn-BD') : 'বেতন নেই'));
+                lateBreakLines.push(empName + ': ' + totalLateMinutes + ' মিনিট = ৳' + (baseSalary > 0 ? Math.round(lateDeduction).toLocaleString('bn-BD') : 'বেতন নেই'));
             if (totalEarlyExitMinutes > 0)
-                earlyBreakLines.push(empName + ': ' + totalEarlyExitMinutes + ' মিনিট → ৳' + (baseSalary > 0 ? Math.round(earlyExitDeduction).toLocaleString('bn-BD') : 'বেতন নেই'));
+                earlyBreakLines.push(empName + ': ' + totalEarlyExitMinutes + ' মিনিট = ৳' + (baseSalary > 0 ? Math.round(earlyExitDeduction).toLocaleString('bn-BD') : 'বেতন নেই'));
         });
         // সারসংক্ষেপ বক্স আপডেট
         const lbMin = document.getElementById('lateTotalMin');
@@ -1026,6 +1032,26 @@
             });
         }
     }
+
+    // ম্যানুয়াল সেভ বাটনের জন্য ফাংশন
+    window.saveSalaryManually = function(empId, month, year) {
+        const inputField = document.getElementById(`sal_${empId}`);
+        const amount = inputField.value.trim();
+        if (amount === "") {
+            showBox("❌ দয়া করে বেতনের পরিমাণ লিখুন", "error");
+            return;
+        }
+        const salaryKey = `salary_${empId}_${month}_${year}`;
+        localStorage.setItem(salaryKey, amount);
+        showBox(`✅ ${employeeDatabase[empId]} এর বেতন ${parseFloat(amount).toLocaleString('bn-BD')} টাকা সংরক্ষিত`, "success");
+        
+        // টেবিল রিফ্রেশ
+        setTimeout(() => {
+            generateTableHeader();
+            renderSheetDashboard(globalAttendanceLogs);
+            renderPublicSheetDashboard(globalAttendanceLogs);
+        }, 300);
+    };
 
     db.ref('attendanceLogs').on('value', (snapshot) => {
         const data = snapshot.val(); globalAttendanceLogs = [];
@@ -1106,9 +1132,9 @@
     }
 
     function sendTelegramNotification(empId, empName, distance, timeNow, dateNow, status, isExit = false) {
-        let textMsg = `🔔 *হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📊 স্ট্যাটাস: ${status === 'Present' ? '✅ উপস্থিত (Entry)' : (status === 'Late' ? '⚠️ লেট (Entry)' : '❌ অনুপস্থিত')}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+        let textMsg = `📢 *হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n✅ স্ট্যাটাস: ${status === 'Present' ? '✅ উপস্থিত (Entry)' : (status === 'Late' ? '⚠️ লেট (Entry)' : '❌ অনুপস্থিত')}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
         if(isExit) {
-            textMsg = `🚪 *অফিস এক্সিট (Exit) অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ বের হওয়ার সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+            textMsg = `📢 *অফিস এক্সিট (Exit) অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 कर्मचारी: ${empName}\n🆔 আইডি: ${empId}\n⏰ বের হওয়ার সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
         }
         fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1177,13 +1203,13 @@
             statusEl.innerHTML = '<span class="gps-spinner"><span class="gps-spin-icon"></span> লোকেশন যাচাই করা হচ্ছে...</span>';
         } else if (state === 'inside') {
             card.classList.add('gps-inside');
-            statusEl.innerHTML = '<span class="pulse-dot"><span></span><i></i></span>&nbsp; অফিসের ভেতরে আছেন ✅';
+            statusEl.innerHTML = '<span class="pulse-dot"><span></span><i></i></span>  অফিসের ভেতরে আছেন ✅';
             mRow.style.display = 'grid';
             distEl.textContent = Math.round(payload);
             radEl.textContent  = getAllowedRadius();
         } else if (state === 'outside') {
             card.classList.add('gps-outside');
-            statusEl.innerHTML = '<span class="pulse-dot"><span></span><i></i></span>&nbsp; অফিস এলাকার বাইরে ❌';
+            statusEl.innerHTML = '<span class="pulse-dot"><span></span><i></i></span>  অফিস এলাকার বাইরে ❌';
             mRow.style.display  = 'grid';
             distEl.textContent  = Math.round(payload);
             radEl.textContent   = getAllowedRadius();
@@ -1207,9 +1233,6 @@
 
     // ══════════════════════════════════════════
     // ডায়নামিক Entry/Exit বাটন + অফিস সময় প্রদর্শন
-    // Entry: ৯:০০ – ১৯:৪৯ | Exit: ১৯:৫০ – ২০:০০
-    // অফিস সময়: ১০:৩০ – ২০:০০
-    // ══════════════════════════════════════════
     function updateAttendanceButton() {
         const now = new Date();
         const h = now.getHours(), m = now.getMinutes();
@@ -1269,7 +1292,7 @@
     updateAttendanceButton();
     setInterval(updateAttendanceButton, 60000);
 
-    // ══ স্মার্ট হাজিরা কার্ডে অফিস সেটিংস দেখাও ══
+    // ══ スマート হাজিরা কার্ডে অফিস সেটিংস দেখাও ══
     function updateCardFromSettings() {
         const s = getAppSettings();
         const g = getAppGpsSettings();
@@ -1494,20 +1517,6 @@
         link.setAttribute("download", `Attendance_Sheet_Month_${monthFilter.value}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
     });
 
-    // বেতন সেভ করো এবং টেবিল রিফ্রেশ করো
-    window.saveSalary = function(empId, month, year, value) {
-        const salaryKey = `salary_${empId}_${month}_${year}`;
-        localStorage.setItem(salaryKey, value || '');
-        clearTimeout(window._salaryRenderTimer);
-        window._salaryRenderTimer = setTimeout(() => {
-            generateTableHeader();
-            renderSheetDashboard(globalAttendanceLogs);
-            renderAdminLateReport(globalAttendanceLogs);
-            renderAdminEarlyExitReport(globalAttendanceLogs);
-            renderPublicSheetDashboard(globalAttendanceLogs);
-        }, 600);
-    };
-
     function parseTime12hToMinutes(timeStr) {
         if (!timeStr || timeStr.trim() === '') return null;
         const m = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -1696,9 +1705,6 @@
     }
     updateLiveClock();
     setInterval(updateLiveClock, 1000);
-
 </script>
 </body>
 </html>
-</html>
-
