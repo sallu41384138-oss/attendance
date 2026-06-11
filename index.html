@@ -970,7 +970,7 @@
             const earlyExitDeduction = totalEarlyExitMinutes * perMinuteRate;
             const totalDeduction = absentDeduction + lateDeduction + earlyExitDeduction;
             const netSalary = baseSalary - totalDeduction;
-            const deductHtml = baseSalary > 0 ? `<div class="deduct-badge">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">অনুপস্থিত: ৳${Math.round(absentDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">লেট (${totalLateMinutes} মি.): ৳${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">আর্লি (${totalEarlyExitMinutes} মি.): ৳${Math.round(earlyExitDeduction).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
+            const deductHtml = baseSalary > 0 ? `<div class="deduct-badge">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">অনুপস্থিত: ${Math.round(absentDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">আর্লি (${totalEarlyExitMinutes} মি.): ${Math.round(earlyExitDeduction).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
             const netHtml = baseSalary > 0 ? `<div class="net-badge">৳${Math.round(netSalary).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
             row.innerHTML = `<td class="meta-cell adm-sticky-id">${empId}</td><td class="meta-cell adm-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td>
             <td class="salary-input-cell"><div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><input type="number" class="salary-input" id="sal_${empId}" value="${savedSalary}" placeholder="০" min="0" style="flex:1;"></div></td>
@@ -1038,10 +1038,25 @@
         const mDate = document.getElementById('manualDate').value; const mEntryTime = document.getElementById('manualEntryTime').value;
         const mExitTime = document.getElementById('manualExitTime').value;
         if (!mId || !mDate) { alert("সঠিক তথ্য দিন!"); return; }
+        // Duplicate check
+        const selectedDateObj = new Date(mDate);
+        const selDay = selectedDateObj.getDate();
+        const selMonth = selectedDateObj.getMonth() + 1;
+        const selYear = selectedDateObj.getFullYear();
+        const existingRecords = globalAttendanceLogs.filter(log => {
+            if (log.id !== mId || !log.rawDate) return false;
+            const d = new Date(log.rawDate);
+            return d.getDate() === selDay && (d.getMonth() + 1) === selMonth && d.getFullYear() === selYear;
+        });
+        if (existingRecords.length > 0) {
+            const empName = employeeDatabase[mId] || mId;
+            const confirmed = confirm(`⚠️ সতর্কতা!\n\n${empName} (${mId}) এর ${mDate} তারিখে ইতিমধ্যে ${existingRecords.length}টি রেকর্ড আছে।\n\nআগের রেকর্ড রেখে নতুন রেকর্ড যোগ করতে চান?\n\n✅ OK = যোগ করুন\n❌ Cancel = বাতিল করুন`);
+            if (!confirmed) return;
+        }
         const dtObj = getCustomBanglaDateTime(mDate, mEntryTime);
         const formattedExit = mExitTime ? formatManualTime12Hour(mExitTime) : "";
         db.ref('attendanceLogs').push().set({ rawDate: dtObj.rawObj.toISOString(), date: dtObj.fullDate, id: mId, name: employeeDatabase[mId], time: dtObj.time, exitTime: formattedExit, status: mStatus });
-        alert(`তথ্য সফলভাবে যুক্ত হয়েছে।`);
+        alert(`✅ তথ্য সফলভাবে যুক্ত হয়েছে।`);
     });
 
     function getDistance(lat1, lon1, lat2, lon2) { const R = 6371e3; const p1 = lat1 * Math.PI / 180; const p2 = lat2 * Math.PI / 180; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180; return R * (2 * Math.atan2(Math.sqrt(Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2)), Math.sqrt(1-(Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2))))); }
@@ -1200,7 +1215,7 @@
             const salaryHtml = baseSalary > 0 ? `৳${Math.round(baseSalary).toLocaleString('bn-BD')}` : `—`;
             const pubLateHtml = totalLateMinutes > 0 ? `<div style="font-size:12px;font-weight:800;color:#92400e;">${baseSalary > 0 ? totalLateMinutes + ' min (' + Math.round(lateDeduction) + ' Tk)' : totalLateMinutes + ' min'}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
             const pubEarlyHtml = totalEarlyMinutes > 0 ? `<div style="font-size:12px;font-weight:800;color:#1e3a8a;">${baseSalary > 0 ? totalEarlyMinutes + ' min (' + Math.round(earlyDeduction) + ' Tk)' : totalEarlyMinutes + ' min'}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
-            const deductHtml = baseSalary > 0 ? `-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}` : `—`;
+            const deductHtml = baseSalary > 0 ? `<div class="deduct-badge" style="color:#c5221f;font-weight:bold;font-size:12px;">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;margin-top:2px;">অনুপস্থিত: ${Math.round(absentDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;">আর্লি (${totalEarlyMinutes} মি.): ${Math.round(earlyDeduction).toLocaleString('bn-BD')}</div>` : `—`;
             const netHtml = baseSalary > 0 ? `৳${Math.round(netSalary).toLocaleString('bn-BD')}` : `—`;
             const row = document.createElement('tr');
             row.innerHTML = `<td class="meta-cell pub-sticky-id">${empId}</td><td class="meta-cell pub-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td><td class="pub-salary-cell">${salaryHtml}</td>
