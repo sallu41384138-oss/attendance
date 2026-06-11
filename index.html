@@ -7,6 +7,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         body {
@@ -141,10 +142,70 @@
         .summary-badge-p { background-color: #e6f4ea; color: #137333; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
         .summary-badge-a { background-color: #fce8e6; color: #c5221f; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
 
-        .btn-download {
-            background-color: #34a853; color: white; border: none; padding: 8px 12px;
-            font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; touch-action: manipulation;
+        /* ===== DOWNLOAD DROPDOWN ===== */
+        .download-dropdown-wrapper {
+            position: relative;
+            display: inline-block;
         }
+        .btn-download-main {
+            background-color: #34a853;
+            color: white;
+            border: none;
+            padding: 8px 10px 8px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px 0 0 6px;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-right: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn-download-arrow {
+            background-color: #2d9248;
+            color: white;
+            border: none;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .btn-download-arrow:hover, .btn-download-main:hover { background-color: #2d9248; }
+        .btn-download-arrow:hover { background-color: #267a3e; }
+        .download-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 4px;
+            background: white;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            z-index: 999;
+            min-width: 160px;
+            overflow: hidden;
+        }
+        .download-menu.open { display: block; }
+        .download-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3c4043;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            transition: background 0.15s;
+        }
+        .download-menu-item:hover { background: #f1f3f4; }
+        .download-menu-item .dl-icon { font-size: 16px; width: 20px; text-align: center; }
+        .download-menu-divider { height: 1px; background: #e8eaed; margin: 2px 0; }
+        /* ===== END DOWNLOAD DROPDOWN ===== */
         
         .admin-section { display: none; width: 100%; max-width: 100%; }
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
@@ -396,7 +457,7 @@
 <div class="admin-login-card" id="adminLoginCard">
     <h3>অ্যাডমিন প্যানেল লগইন</h3>
     <input type="text" id="adminUsername" class="admin-input" placeholder="ইউজারনেম দিন">
-    <input type="password" id="adminPassword" class="admin-input" placeholder="পাসওয়ার্ড দিন">
+    <input type="password" id="adminPassword" class="admin-input" placeholder="পাসওয়ার্ড দিন">
     <button id="adminLoginBtn" class="btn-submit" style="background-color: #3c4043;">লগইন করুন</button>
 </div>
 
@@ -410,7 +471,7 @@
     </div>
     
     <div class="report-container" style="background: #eaf2fd; max-width: 1000px; margin-left: auto; margin-right: auto;">
-        <h3 style="color: #1a73e8; font-weight: bold;">🛠️ ম্যানুয়াল এন্ট্রি প্যানেল</h3>
+        <h3 style="color: #1a73e8; font-weight: bold;">🛠️ ম্যানুয়াল এন্ট্রি প্যানেল</h3>
         <div class="admin-grid"><select id="manualEmpId" class="admin-input"><option value="">কর্মচারী নির্বাচন করুন...</option><option value="1001">Utsob (1001)</option><option value="1002">Sagor (1002)</option><option value="1003">Rasel (1003)</option><option value="1004">Salman (1004)</option><option value="1005">Raihan (1005)</option></select>
         <select id="manualStatus" class="admin-input"><option value="Present">Present (উপস্থিত)</option><option value="Off Day">Off Day (অফ ডে)</option><option value="Late">Late (দেরি)</option><option value="Absent">Absent (অনুপস্থিত)</option></select></div>
         <div class="admin-grid"><input type="date" id="manualDate" class="admin-input"><input type="time" id="manualEntryTime" class="admin-input" placeholder="Entry Time" value="10:00"><input type="time" id="manualExitTime" class="admin-input" placeholder="Exit Time"></div>
@@ -418,8 +479,26 @@
     </div>
 
     <div class="report-container" style="max-width: 100%; overflow: hidden;">
-        <div class="excel-filter-area"><div><label for="monthFilter" style="font-weight: 600; color: #5f6368; margin-right: 8px;">মাস নির্বাচন:</label><select id="monthFilter" class="month-dropdown"><option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option><option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option><option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option><option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option></select></div><button id="downloadBtn" class="btn-download">Excel ডাউনলোড</button></div>
-        <div class="table-responsive"><table id="sheetTable"><thead><tr id="tableHeaderRow"></tr></thead><tbody id="sheetTableBody"></tbody></table></div>
+        <div class="excel-filter-area">
+            <div>
+                <label for="monthFilter" style="font-weight: 600; color: #5f6368; margin-right: 8px;">মাস নির্বাচন:</label>
+                <select id="monthFilter" class="month-dropdown"><option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option><option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option><option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option><option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option></select>
+            </div>
+
+            <!-- DOWNLOAD DROPDOWN -->
+            <div class="download-dropdown-wrapper" id="downloadDropdownWrapper">
+                <button class="btn-download-main" id="downloadMainBtn">⬇ ডাউনলোড</button><button class="btn-download-arrow" id="downloadArrowBtn">▾</button>
+                <div class="download-menu" id="downloadMenu">
+                    <button class="download-menu-item" id="dlExcelBtn"><span class="dl-icon">📊</span> Excel (.csv)</button>
+                    <div class="download-menu-divider"></div>
+                    <button class="download-menu-item" id="dlPdfBtn"><span class="dl-icon">📄</span> PDF</button>
+                    <div class="download-menu-divider"></div>
+                    <button class="download-menu-item" id="dlJpgBtn"><span class="dl-icon">🖼️</span> JPG ছবি</button>
+                </div>
+            </div>
+            <!-- END DOWNLOAD DROPDOWN -->
+        </div>
+        <div class="table-responsive" id="adminTableResponsive"><table id="sheetTable"><thead><tr id="tableHeaderRow"></tr></thead><tbody id="sheetTableBody"></tbody></table></div>
     </div>
 
     <div class="settings-container">
@@ -601,7 +680,7 @@
         if (btnElement) { btnElement.innerHTML = '⏳'; btnElement.disabled = true; }
         salaryRef.child(salaryKey).set(salaryAmount).then(() => {
             if (btnElement) { btnElement.innerHTML = '✓'; setTimeout(() => { btnElement.innerHTML = originalText; btnElement.disabled = false; }, 1500); }
-            showToast('✅ বেতন সংরক্ষিত হয়েছে (সব ডিভাইসে আপডেট হবে)', 'success');
+            showToast('✅ বেতন সংরক্ষিত হয়েছে (সব ডিভাইসে আপডেট হবে)', 'success');
         }).catch(err => {
             if (btnElement) { btnElement.innerHTML = originalText; btnElement.disabled = false; }
             showToast('❌ সংরক্ষণ ব্যর্থ: ' + err.message, 'error');
@@ -657,12 +736,11 @@
     const banglaDays = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'];
 
     const submitBtn = document.getElementById('submitBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const msgBox = document.getElementById('responseMessage');
     const sheetTableBody = document.getElementById('sheetTableBody');
     const tableHeaderRow = document.getElementById('tableHeaderRow');
     const monthFilter = document.getElementById('monthFilter');
     const deviceTableBody = document.getElementById('deviceTableBody');
+    const msgBox = document.getElementById('responseMessage');
     
     let globalAttendanceLogs = [];
     let globalDevices = {};
@@ -677,7 +755,103 @@
         loadSalariesFromFirebase();
         loadClickLimitsFromFirebase();
         startGpsWatch();
+        initDownloadDropdown();
     });
+
+    // ===== DOWNLOAD DROPDOWN LOGIC =====
+    function initDownloadDropdown() {
+        const wrapper = document.getElementById('downloadDropdownWrapper');
+        const menu = document.getElementById('downloadMenu');
+        const mainBtn = document.getElementById('downloadMainBtn');
+        const arrowBtn = document.getElementById('downloadArrowBtn');
+
+        function toggleMenu() { menu.classList.toggle('open'); }
+        function closeMenu() { menu.classList.remove('open'); }
+
+        mainBtn.addEventListener('click', toggleMenu);
+        arrowBtn.addEventListener('click', toggleMenu);
+
+        document.addEventListener('click', function(e) {
+            if (!wrapper.contains(e.target)) closeMenu();
+        });
+
+        document.getElementById('dlExcelBtn').addEventListener('click', function() {
+            closeMenu(); downloadExcel();
+        });
+        document.getElementById('dlPdfBtn').addEventListener('click', function() {
+            closeMenu(); downloadPDF();
+        });
+        document.getElementById('dlJpgBtn').addEventListener('click', function() {
+            closeMenu(); downloadJPG();
+        });
+    }
+
+    function downloadExcel() {
+        if (globalAttendanceLogs.length === 0) { alert("কোনো রেকর্ড নেই!"); return; }
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFআইডি,নাম,তারিখ,ইন টাইম,আউট টাইম,স্ট্যাটাস\n";
+        globalAttendanceLogs.forEach(log => {
+            csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.exitTime || '-'}","${log.status}"\n`;
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Attendance_Sheet_Month_${monthFilter.value}.csv`);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+
+    function downloadPDF() {
+        const table = document.getElementById('sheetTable');
+        if (!table) { alert("টেবিল পাওয়া যাচ্ছে না!"); return; }
+        showToast('📄 PDF তৈরি হচ্ছে...', 'success');
+        html2canvas(table, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+            const imgData = canvas.toDataURL('image/jpeg', 0.92);
+            const imgW = canvas.width;
+            const imgH = canvas.height;
+            const monthNames = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+            const mName = monthNames[parseInt(monthFilter.value) - 1];
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes">
+<title>হাজিরা রিপোর্ট - ${mName}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#f0f0f0; display:flex; flex-direction:column; align-items:center; font-family:sans-serif; min-height:100vh; }
+  .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+  .top-bar h2 { font-size:15px; font-weight:700; color:#90caf9; }
+  .top-bar span { font-size:12px; color:#b0bec5; }
+  .zoom-hint { background:#e8f0fe; color:#1a56c4; font-size:12px; font-weight:600; padding:8px 16px; width:100%; text-align:center; }
+  .sheet-wrap { overflow:auto; width:100%; padding:12px; touch-action:pan-x pan-y pinch-zoom; }
+  img { max-width:none; display:block; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,0.15); }
+  .print-btn { margin:16px; background:#1a73e8; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; }
+</style></head><body>
+<div class="top-bar"><h2>📋 হাজিরা রিপোর্ট — ${mName}</h2><span>চিমটি দিয়ে zoom করুন</span></div>
+<div class="zoom-hint">🤏 দুই আঙুলে চিমটি দিয়ে Zoom করুন | Pinch to Zoom</div>
+<div class="sheet-wrap"><img src="${imgData}" width="${imgW}" height="${imgH}" /></div>
+<button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+</body></html>`;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Attendance_Sheet_Month_${monthFilter.value}.html`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 3000);
+            showToast('✅ PDF (HTML) ডাউনলোড সফল! ব্রাউজারে খুলুন ও Print করুন।', 'success');
+        }).catch(() => { showToast('❌ PDF তৈরিতে ত্রুটি হয়েছে।', 'error'); });
+    }
+
+    function downloadJPG() {
+        const table = document.getElementById('sheetTable');
+        if (!table) { alert("টেবিল পাওয়া যাচ্ছে না!"); return; }
+        showToast('🖼️ JPG তৈরি হচ্ছে...', 'success');
+        html2canvas(table, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Attendance_Sheet_Month_${monthFilter.value}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.92);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            showToast('✅ JPG ডাউনলোড সফল!', 'success');
+        }).catch(() => { showToast('❌ JPG তৈরিতে ত্রুটি হয়েছে।', 'error'); });
+    }
+    // ===== END DOWNLOAD DROPDOWN LOGIC =====
 
     function getLocalDeviceId() {
         let devId = localStorage.getItem('office_app_device_token');
@@ -754,7 +928,9 @@
                     const logData = monthDaysData[d];
                     const status = logData.status;
                     const key = logData.fbKey;
-                    if (status !== 'Absent') {
+                    if (status === 'Off Day') {
+                        daysHtml += `<td ${isTodayCell}><span style="color:#1a73e8;font-weight:bold;font-size:11px;">Off Day</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`;
+                    } else if (status !== 'Absent') {
                         pCount++;
                         let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late';
                         let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa; font-size:9px;">No Exit</span>`;
@@ -817,7 +993,7 @@
 
     window.resetEmployeeDevice = function(empId) {
         if (confirm(`${employeeDatabase[empId]}-এর ডিভাইস লক রিসেট করতে চান?`)) {
-            db.ref(`registeredDevices/${empId}`).remove().then(() => { alert("ডিভাইস সফলভাবে রিসেট হয়েছে!"); });
+            db.ref(`registeredDevices/${empId}`).remove().then(() => { alert("ডিভাইস সফলভাবে রিসেট হয়েছে!"); });
         }
     }
 
@@ -854,23 +1030,20 @@
         const dtObj = getCustomBanglaDateTime(mDate, mEntryTime);
         const formattedExit = mExitTime ? formatManualTime12Hour(mExitTime) : "";
         db.ref('attendanceLogs').push().set({ rawDate: dtObj.rawObj.toISOString(), date: dtObj.fullDate, id: mId, name: employeeDatabase[mId], time: dtObj.time, exitTime: formattedExit, status: mStatus });
-        alert(`তথ্য সফলভাবে যুক্ত হয়েছে।`);
+        alert(`তথ্য সফলভাবে যুক্ত হয়েছে।`);
     });
 
     function getDistance(lat1, lon1, lat2, lon2) { const R = 6371e3; const p1 = lat1 * Math.PI / 180; const p2 = lat2 * Math.PI / 180; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180; return R * (2 * Math.atan2(Math.sqrt(Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2)), Math.sqrt(1-(Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dLon/2) * Math.sin(dLon/2))))); }
 
     function sendTelegramNotification(empId, empName, distance, timeNow, dateNow, status, isExit = false) {
-        let textMsg = `🔔 *হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📊 স্ট্যাটাস: ${status === 'Present' ? '✅ উপস্থিত (Entry)' : (status === 'Late' ? '⚠️ লেট (Entry)' : '❌ অনুপস্থিত')}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
-        if(isExit) { textMsg = `🚪 *অফিস এক্সিট (Exit) অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ বের হওয়ার সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`; }
+        let textMsg = `🔔 *হাজিরা অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ সময়: ${timeNow}\n📊 স্ট্যাটাস: ${status === 'Present' ? '✅ উপস্থিত (Entry)' : (status === 'Late' ? '⚠️ লেট (Entry)' : '❌ অনুপস্থিত')}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`;
+        if(isExit) { textMsg = `🚪 *অফিস এক্সিট (Exit) অ্যালার্ট!*\n\n📅 তারিখ: ${dateNow}\n👤 কর্মচারী: ${empName}\n🆔 আইডি: ${empId}\n⏰ বের হওয়ার সময়: ${timeNow}\n📍 দূরত্ব: অফিস থেকে ${Math.round(distance)} মিটার ভেতরে`; }
         fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: textMsg, parse_mode: 'Markdown' }) });
     }
 
     function getTodayClickKey() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
-    
     function getClickCount(empId, mode) { return getClickCountFromFirebase(empId, mode); }
-    
     function incrementClickCount(empId, mode) { saveClickLimitToFirebase(empId, mode); }
-    
     function getCurrentMode() { const now = new Date(); const totalMin = now.getHours() * 60 + now.getMinutes(); if (totalMin >= 9*60 && totalMin < 19*60+50) return 'entry'; if (totalMin >= 19*60+50 && totalMin < 20*60) return 'exit'; return 'closed'; }
 
     let gpsWatchId = null; let lastKnownDistance = null; let gpsFailCount = 0; const GPS_FAIL_LIMIT = 5;
@@ -951,8 +1124,6 @@
     submitBtn.addEventListener('click', (e) => { e.preventDefault(); handleAttendanceCheckIn(); });
     submitBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleAttendanceCheckIn(); }, {passive: false});
 
-    downloadBtn.addEventListener('click', () => { if (globalAttendanceLogs.length === 0) { alert("কোনো রেকর্ড নেই!"); return; } let csvContent = "data:text/csv;charset=utf-8,\uFEFFআইডি,নাম,তারিখ,ইন টাইম,আউট টাইম,স্ট্যাটাস\n"; globalAttendanceLogs.forEach(log => { csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.exitTime || '-'}","${log.status}"\n`; }); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `Attendance_Sheet_Month_${monthFilter.value}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); });
-
     function parseTime12hToMinutes(timeStr) { if (!timeStr || timeStr.trim() === '') return null; const m = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i); if (!m) return null; let h = parseInt(m[1]), min = parseInt(m[2]); const ampm = m[3].toUpperCase(); if (ampm === 'AM') { if (h === 12) h = 0; } else { if (h !== 12) h += 12; } return h * 60 + min; }
 
     function showBox(text, type) { msgBox.innerText = text; msgBox.className = type; msgBox.style.display = "block"; if (type !== "loading" && !text.includes("ডিভাইস")) submitBtn.disabled = false; }
@@ -993,7 +1164,7 @@
             let daysHtml = ''; let pCount = 0; let aCount = 0;
             for (let d = 1; d <= daysInMonth; d++) {
                 const isTodayCell = (isCurrentMonth && today.getDate() === d) ? 'class="today-highlight"' : '';
-                if (monthDaysData[d]) { const logData = monthDaysData[d]; const status = logData.status; if (status !== 'Absent') { pCount++; let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late'; let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa;font-size:9px;">No Exit</span>`; daysHtml += `<td ${isTodayCell}><div class="time-box-container"><span style="color:#137333;font-weight:bold;font-size:11px;">P</span><span class="${inTimeClass}">In: ${logData.time}</span>${outHtml}</div></td>`; } else { aCount++; daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span></td>`; } }
+                if (monthDaysData[d]) { const logData = monthDaysData[d]; const status = logData.status; if (status === 'Off Day') { daysHtml += `<td ${isTodayCell}><span style="color:#1a73e8;font-weight:bold;font-size:11px;">Off Day</span></td>`; } else if (status !== 'Absent') { pCount++; let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late'; let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa;font-size:9px;">No Exit</span>`; daysHtml += `<td ${isTodayCell}><div class="time-box-container"><span style="color:#137333;font-weight:bold;font-size:11px;">P</span><span class="${inTimeClass}">In: ${logData.time}</span>${outHtml}</div></td>`; } else { aCount++; daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span></td>`; } }
                 else { daysHtml += `<td ${isTodayCell}></td>`; }
             }
             const salaryKey = `${empId}_${selectedMonth}_${currentYear}`;
