@@ -803,29 +803,40 @@
         const table = document.getElementById('sheetTable');
         if (!table) { alert("টেবিল পাওয়া যাচ্ছে না!"); return; }
         showToast('📄 PDF তৈরি হচ্ছে...', 'success');
-        html2canvas(table, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+        html2canvas(table, { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 }).then(canvas => {
             const imgData = canvas.toDataURL('image/jpeg', 0.92);
             const imgW = canvas.width;
             const imgH = canvas.height;
             const monthNames = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
             const mName = monthNames[parseInt(monthFilter.value) - 1];
             const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
 <title>হাজিরা রিপোর্ট - ${mName}</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#f0f0f0; display:flex; flex-direction:column; align-items:center; font-family:sans-serif; min-height:100vh; }
-  .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+  html, body { width:100%; height:100%; background:#f0f0f0; font-family:sans-serif; }
+  .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; flex-shrink:0; }
   .top-bar h2 { font-size:15px; font-weight:700; color:#90caf9; }
   .top-bar span { font-size:12px; color:#b0bec5; }
-  .zoom-hint { background:#e8f0fe; color:#1a56c4; font-size:12px; font-weight:600; padding:8px 16px; width:100%; text-align:center; }
-  .sheet-wrap { overflow:auto; width:100%; padding:12px; touch-action:pan-x pan-y pinch-zoom; }
-  img { max-width:none; display:block; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,0.15); }
-  .print-btn { margin:16px; background:#1a73e8; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; }
+  .zoom-hint { background:#e8f0fe; color:#1a56c4; font-size:12px; font-weight:600; padding:8px 16px; width:100%; text-align:center; flex-shrink:0; }
+  .sheet-wrap { overflow:auto; width:100%; padding:12px; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y pinch-zoom; }
+  .sheet-inner { display:inline-block; min-width:100%; }
+  img { display:block; max-width:100%; height:auto; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,0.15); }
+  .print-btn { display:block; margin:16px auto; background:#1a73e8; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; }
+  @media print {
+    .top-bar, .zoom-hint, .print-btn { display:none !important; }
+    body { background:white; }
+    .sheet-wrap { padding:0; overflow:visible; }
+    img { max-width:100%; width:100%; height:auto; border-radius:0; box-shadow:none; page-break-inside:avoid; }
+  }
+  @media (min-width: 1024px) {
+    .sheet-wrap { display:flex; justify-content:center; }
+    img { max-width:100%; width:auto; }
+  }
 </style></head><body>
 <div class="top-bar"><h2>📋 হাজিরা রিপোর্ট — ${mName}</h2><span>চিমটি দিয়ে zoom করুন</span></div>
-<div class="zoom-hint">🤏 দুই আঙুলে চিমটি দিয়ে Zoom করুন | Pinch to Zoom</div>
-<div class="sheet-wrap"><img src="${imgData}" width="${imgW}" height="${imgH}" /></div>
+<div class="zoom-hint">🤏 মোবাইলে: দুই আঙুলে Zoom করুন &nbsp;|&nbsp; PC-তে: Ctrl + Scroll বা Print করুন</div>
+<div class="sheet-wrap"><div class="sheet-inner"><img src="${imgData}" style="width:${imgW}px;max-width:none;" /></div></div>
 <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
 </body></html>`;
             const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
@@ -843,7 +854,7 @@
         const table = document.getElementById('sheetTable');
         if (!table) { alert("টেবিল পাওয়া যাচ্ছে না!"); return; }
         showToast('🖼️ JPG তৈরি হচ্ছে...', 'success');
-        html2canvas(table, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+        html2canvas(table, { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 }).then(canvas => {
             const link = document.createElement('a');
             link.download = `Attendance_Sheet_Month_${monthFilter.value}.jpg`;
             link.href = canvas.toDataURL('image/jpeg', 0.92);
@@ -901,8 +912,8 @@
         }
         headerHtml += `<th style="background-color: #e6f4ea; min-width: 40px;">P</th><th style="background-color: #fce8e6; min-width: 40px;">A</th>`;
         headerHtml += `<th style="background-color: #e8f0fe; min-width: 130px;">💰 বেতন<span class="day-subtext">(টাকা লিখুন)</span></th><th style="background-color: #e8f0fe; min-width: 50px;">💾</th>`;
-        headerHtml += `<th style="background-color: #fffbea; min-width: 90px;">⏱️ লেট<span class="day-subtext">(মি. / টাকা)</span></th>`;
-        headerHtml += `<th style="background-color: #eef4ff; min-width: 90px;">🏃 আর্লি<span class="day-subtext">(মি. / টাকা)</span></th>`;
+        headerHtml += `<th style="background-color: #fffbea; min-width: 110px;">⏱️ Late Entry<span class="day-subtext">(min / Tk)</span></th>`;
+        headerHtml += `<th style="background-color: #eef4ff; min-width: 110px;">🏃 Early Exit<span class="day-subtext">(min / Tk)</span></th>`;
         headerHtml += `<th style="background-color: #fce8e6; min-width: 80px;">✂️ কাটা<span class="day-subtext">(হিসাব)</span></th><th style="background-color: #e6f4ea; min-width: 80px;">✅ নেট বেতন</th>`;
         tableHeaderRow.innerHTML = headerHtml;
     }
@@ -964,8 +975,8 @@
             row.innerHTML = `<td class="meta-cell adm-sticky-id">${empId}</td><td class="meta-cell adm-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td>
             <td class="salary-input-cell"><div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><input type="number" class="salary-input" id="sal_${empId}" value="${savedSalary}" placeholder="০" min="0" style="flex:1;"></div></td>
             <td style="background:#e8f0fe; text-align:center; vertical-align:middle;"><button class="btn-save-salary" onclick="saveSalaryToFirebase('${empId}', ${selectedMonth}, ${currentYear}, this)" style="background:#34a853; color:white; border:none; border-radius:6px; padding:6px 10px; font-size:11px; font-weight:bold; cursor:pointer;">💾 সংরক্ষণ</button></td>
-            <td style="background:#fffbea;text-align:center;min-width:90px;"><div style="font-size:13px;font-weight:800;color:#92400e;">${totalLateMinutes > 0 ? totalLateMinutes + ' মি.' : '—'}</div><div style="font-size:11px;color:#c5221f;">${baseSalary > 0 && totalLateMinutes > 0 ? '৳' + Math.round(lateDeduction).toLocaleString('bn-BD') : ''}</div></td>
-            <td style="background:#eef4ff;text-align:center;min-width:90px;"><div style="font-size:13px;font-weight:800;color:#1e3a8a;">${totalEarlyExitMinutes > 0 ? totalEarlyExitMinutes + ' মি.' : '—'}</div><div style="font-size:11px;color:#c5221f;">${baseSalary > 0 && totalEarlyExitMinutes > 0 ? '৳' + Math.round(earlyExitDeduction).toLocaleString('bn-BD') : ''}</div></td>
+            <td style="background:#fffbea;text-align:center;min-width:110px;"><div style="font-size:12px;font-weight:800;color:#92400e;">${totalLateMinutes > 0 ? (baseSalary > 0 ? totalLateMinutes + ' min (' + Math.round(lateDeduction) + ' Tk)' : totalLateMinutes + ' min') : '—'}</div></td>
+            <td style="background:#eef4ff;text-align:center;min-width:110px;"><div style="font-size:12px;font-weight:800;color:#1e3a8a;">${totalEarlyExitMinutes > 0 ? (baseSalary > 0 ? totalEarlyExitMinutes + ' min (' + Math.round(earlyExitDeduction) + ' Tk)' : totalEarlyExitMinutes + ' min') : '—'}</div></td>
             <td class="salary-deduct-cell">${deductHtml}</td><td class="salary-net-cell">${netHtml}</td>`;
             sheetTableBody.appendChild(row);
         });
@@ -1144,7 +1155,7 @@
         let headerHtml = `<th class="pub-sticky-id" style="min-width:62px;">আইডি</th><th class="pub-sticky-name" style="min-width:90px;">নাম</th>`;
         for (let i = 1; i <= daysInMonth; i++) { const tempDate = new Date(currentYear, selectedMonth - 1, i); const dayName = banglaDays[tempDate.getDay()]; const isTodayCol = (isCurrentMonth && today.getDate() === i) ? 'class="today-highlight"' : ''; headerHtml += `<th ${isTodayCol} style="min-width:95px;">${i}<span class="day-subtext">${dayName}</span></th>`; }
         headerHtml += `<th style="background-color:#e6f4ea; min-width:40px;">P</th><th style="background-color:#fce8e6; min-width:40px;">A</th><th style="background-color:#e8f0fe; min-width:80px;">💰 বেতন</th>`;
-        headerHtml += `<th style="background-color:#fff8e1; min-width:90px;">⏱️ লেট<span class="day-subtext">(মি. / টাকা)</span></th><th style="background-color:#eef4ff; min-width:90px;">🏃 আর্লি<span class="day-subtext">(মি. / টাকা)</span></th>`;
+        headerHtml += `<th style="background-color:#fff8e1; min-width:110px;">⏱️ Late Entry<span class="day-subtext">(min / Tk)</span></th><th style="background-color:#eef4ff; min-width:110px;">🏃 Early Exit<span class="day-subtext">(min / Tk)</span></th>`;
         headerHtml += `<th style="background-color:#fff4f4; min-width:80px;">✂️ কাটা</th><th style="background-color:#e6f4ea; min-width:80px;">✅ নেট</th>`;
         publicTableHeaderRow.innerHTML = headerHtml;
     }
@@ -1187,13 +1198,13 @@
             const totalDeduction = absentDeduction + lateDeduction + earlyDeduction;
             const netSalary = baseSalary - totalDeduction;
             const salaryHtml = baseSalary > 0 ? `৳${Math.round(baseSalary).toLocaleString('bn-BD')}` : `—`;
-            const pubLateHtml = totalLateMinutes > 0 ? `<div style="font-size:13px;font-weight:800;color:#92400e;">${totalLateMinutes} মি.</div><div style="font-size:11px;color:#c5221f;">${baseSalary > 0 ? '৳' + Math.round(lateDeduction).toLocaleString('bn-BD') : ''}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
-            const pubEarlyHtml = totalEarlyMinutes > 0 ? `<div style="font-size:13px;font-weight:800;color:#1e3a8a;">${totalEarlyMinutes} মি.</div><div style="font-size:11px;color:#c5221f;">${baseSalary > 0 ? '৳' + Math.round(earlyDeduction).toLocaleString('bn-BD') : ''}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
+            const pubLateHtml = totalLateMinutes > 0 ? `<div style="font-size:12px;font-weight:800;color:#92400e;">${baseSalary > 0 ? totalLateMinutes + ' min (' + Math.round(lateDeduction) + ' Tk)' : totalLateMinutes + ' min'}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
+            const pubEarlyHtml = totalEarlyMinutes > 0 ? `<div style="font-size:12px;font-weight:800;color:#1e3a8a;">${baseSalary > 0 ? totalEarlyMinutes + ' min (' + Math.round(earlyDeduction) + ' Tk)' : totalEarlyMinutes + ' min'}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
             const deductHtml = baseSalary > 0 ? `-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}` : `—`;
             const netHtml = baseSalary > 0 ? `৳${Math.round(netSalary).toLocaleString('bn-BD')}` : `—`;
             const row = document.createElement('tr');
             row.innerHTML = `<td class="meta-cell pub-sticky-id">${empId}</td><td class="meta-cell pub-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td><td class="pub-salary-cell">${salaryHtml}</td>
-            <td style="background:#fffbea;text-align:center;min-width:90px;">${pubLateHtml}</td><td style="background:#eef4ff;text-align:center;min-width:90px;">${pubEarlyHtml}</td>
+            <td style="background:#fffbea;text-align:center;min-width:110px;">${pubLateHtml}</td><td style="background:#eef4ff;text-align:center;min-width:110px;">${pubEarlyHtml}</td>
             <td class="pub-deduct-cell">${deductHtml}</td><td class="pub-net-cell">${netHtml}</td>`;
             publicSheetTableBody.appendChild(row);
         });
