@@ -215,7 +215,7 @@
         .btn-reset-dev { background-color: #fff4e5; color: #b06000; border: 1px solid #ff9800; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; touch-action: manipulation; transition: 0.2s; }
         .btn-reset-dev:active { background-color: #ffe0b2; }
 
-        .salary-input-cell { min-width: 130px; background-color: #f0f7ff; }
+        .salary-input-cell { min-width: 150px; background-color: #f0f7ff; }
         .salary-input {
             width: 80px; padding: 4px 6px; border: 1px solid #1a73e8; border-radius: 5px;
             font-size: 12px; font-weight: bold; color: #1a73e8; text-align: center;
@@ -257,7 +257,7 @@
         .pub-sticky-id { position: sticky; left: 0; z-index: 2; background: #fafafa; }
         .pub-sticky-name { position: sticky; left: 62px; z-index: 2; background: #fafafa; }
         thead .pub-sticky-id, thead .pub-sticky-name { background: #f1f3f4; z-index: 3; }
-        .pub-salary-cell { background-color: #f0faf0; min-width: 75px; font-weight: bold; font-size: 11px; color: #137333; }
+        .pub-salary-cell { background-color: #f0faf0; min-width: 95px; font-weight: bold; font-size: 11px; color: #137333; }
         .pub-deduct-cell { background-color: #fff4f4; min-width: 75px; font-size: 10px; color: #c5221f; font-weight: bold; }
         .pub-late-cell { background-color: #fff8e1; min-width: 65px; font-size: 10px; color: #b06000; font-weight: bold; }
         .pub-absent-cell { background-color: #fce8e6; min-width: 55px; font-size: 11px; color: #c5221f; font-weight: bold; }
@@ -409,6 +409,50 @@
         }
         .toast-message.error { background: #c5221f; }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translateX(-50%) translateY(20px); } 15% { opacity: 1; transform: translateX(-50%) translateY(0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(20px); } }
+
+        /* ===== SINGLE EMPLOYEE A4 REPORT ===== */
+        .single-emp-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+        .single-emp-controls .settings-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+        .single-emp-name-preview {
+            background: #e8f0fe; border: 1px solid #c7d8fc; border-radius: 8px;
+            padding: 10px 14px; font-size: 14px; font-weight: 700; color: #1a56c4; margin-bottom: 14px;
+        }
+        .single-emp-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-single-dl { flex: 1; min-width: 140px; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: bold; color: white; cursor: pointer; touch-action: manipulation; }
+        .btn-single-pdf { background-color: #c5221f; }
+        .btn-single-pdf:active { background-color: #a10000; }
+        .btn-single-png { background-color: #7b1fa2; }
+        .btn-single-png:active { background-color: #5c1580; }
+
+        #a4ReportOffscreen {
+            position: fixed;
+            top: -10000px;
+            left: -10000px;
+            width: 794px;
+            background: #ffffff;
+            padding: 30px;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .a4-header { text-align: center; border-bottom: 3px solid #1a73e8; padding-bottom: 12px; margin-bottom: 16px; }
+        .a4-header h1 { color: #1a73e8; font-size: 22px; margin: 0 0 4px 0; }
+        .a4-header p { color: #5f6368; font-size: 12px; margin: 0; }
+        .a4-emp-box { display: flex; justify-content: space-between; background: #f1f3f4; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; }
+        .a4-emp-box b { color: #1a73e8; }
+        .a4-table { width: 100%; min-width: 0; max-width: 100%; border-collapse: collapse; font-size: 8.5px; table-layout: fixed; }
+        .a4-table th, .a4-table td { border: 1px solid #dcdcdc; padding: 4px 2px; text-align: center; word-wrap: break-word; overflow-wrap: break-word; }
+        .a4-table th:nth-child(1), .a4-table td:nth-child(1) { width: 8%; }
+        .a4-table th:nth-child(2), .a4-table td:nth-child(2) { width: 12%; }
+        .a4-table th:nth-child(3), .a4-table td:nth-child(3) { width: 16%; }
+        .a4-table th:nth-child(4), .a4-table td:nth-child(4) { width: 16%; }
+        .a4-table th:nth-child(5), .a4-table td:nth-child(5) { width: 16%; }
+        .a4-table th:nth-child(6), .a4-table td:nth-child(6) { width: 16%; }
+        .a4-table th:nth-child(7), .a4-table td:nth-child(7) { width: 16%; }
+        .a4-table th { background: #f1f3f4; }
+        .a4-summary-row { display: flex; gap: 10px; margin-top: 16px; }
+        .a4-summary-box { flex: 1; border-radius: 8px; padding: 10px; text-align: center; font-size: 12px; font-weight: 700; }
+        .a4-footer { margin-top: 20px; font-size: 10px; color: #999; text-align: center; }
+        /* ===== END SINGLE EMPLOYEE A4 REPORT ===== */
     </style>
 </head>
 <body>
@@ -478,6 +522,33 @@
         <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">তথ্য যুক্ত / আপডেট করুন</button>
     </div>
 
+    <div class="report-container" style="max-width: 1000px; margin-left: auto; margin-right: auto; border: 1px solid #7b1fa2;">
+        <h3 style="color: #6a1b9a; font-weight: bold;">👤 একক কর্মচারী রিপোর্ট (A4 PDF / PNG)</h3>
+        <p style="font-size: 12px; color: #666; margin-top:-5px;">কর্মচারী নির্বাচন করলে নাম স্বয়ংক্রিয়ভাবে বসে যাবে এবং A4 সাইজ রিপোর্ট ডাউনলোড করা যাবে।</p>
+        <div class="single-emp-controls">
+            <div class="settings-group">
+                <label class="settings-label" for="singleEmpId">কর্মচারী নির্বাচন করুন</label>
+                <select id="singleEmpId" class="admin-input" style="margin-bottom:0;">
+                    <option value="">নির্বাচন করুন...</option>
+                    <option value="1001">Utsob (1001)</option>
+                    <option value="1002">Sagor (1002)</option>
+                    <option value="1003">Rohan (1003)</option>
+                    <option value="1004">Salman (1004)</option>
+                    <option value="1005">Raihan (1005)</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <label class="settings-label" for="singleEmpMonth">মাস</label>
+                <select id="singleEmpMonth" class="admin-input" style="margin-bottom:0;"><option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option><option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option><option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option><option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option></select>
+            </div>
+        </div>
+        <div class="single-emp-name-preview" id="singleEmpNamePreview">👤 নাম: — (উপরে থেকে কর্মচারী নির্বাচন করুন)</div>
+        <div class="single-emp-btn-row">
+            <button class="btn-single-dl btn-single-pdf" id="btnSingleEmpPdf">📄 A4 PDF ডাউনলোড</button>
+            <button class="btn-single-dl btn-single-png" id="btnSingleEmpPng">🖼️ PNG ডাউনলোড</button>
+        </div>
+    </div>
+
     <div class="report-container" style="max-width: 100%; overflow: hidden;">
         <div class="excel-filter-area">
             <div>
@@ -523,6 +594,9 @@
         <button class="btn-settings-save" onclick="saveGpsSettings()">📍 GPS সেটিংস সংরক্ষণ</button><div id="gps-settings-msg" class="settings-msg"></div>
     </div>
 </div>
+
+<!-- Offscreen A4 report render target -->
+<div id="a4ReportOffscreen"></div>
 
 <script>
     const firebaseConfig = {
@@ -756,6 +830,7 @@
         loadClickLimitsFromFirebase();
         startGpsWatch();
         initDownloadDropdown();
+        initSingleEmployeeReport();
     });
 
     // ===== DOWNLOAD DROPDOWN LOGIC =====
@@ -799,68 +874,53 @@
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
-    function downloadPDF() {
-        const tableWrap = document.getElementById('adminTableResponsive');
-        const table = document.getElementById('sheetTable');
-        if (!table || !tableWrap) { alert("টেবিল পাওয়া যাচ্ছে না!"); return; }
-        showToast('📄 PDF তৈরি হচ্ছে...', 'success');
+    // Bulk PDF: one real A4-size page PER EMPLOYEE (A to Z / সব কর্মচারী), reusing the
+    // same detailed attendance+salary report builder used for the single-employee download.
+    async function downloadPDF() {
+        showToast('📄 সবার A4 রিপোর্ট তৈরি হচ্ছে...', 'success');
 
         const monthNames = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-        const mName = monthNames[parseInt(monthFilter.value) - 1];
+        const selectedMonth = parseInt(monthFilter.value);
+        const mName = monthNames[selectedMonth - 1];
         const currentYear = new Date().getFullYear();
+        const offscreen = document.getElementById('a4ReportOffscreen');
 
-        // Remove sticky positioning temporarily so all columns render correctly
-        const stickyEls = table.querySelectorAll('.adm-sticky-id, .adm-sticky-name');
-        stickyEls.forEach(el => { el._origPosition = el.style.position; el.style.position = 'static'; });
-
-        // Save and reset scroll
-        const savedScrollLeft = tableWrap.scrollLeft;
-        tableWrap.scrollLeft = 0;
-        const origOverflow = tableWrap.style.overflow;
-        tableWrap.style.overflow = 'visible';
-
-        html2canvas(table, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            scrollX: 0,
-            scrollY: -window.scrollY,
-            width: table.scrollWidth,
-            windowWidth: table.scrollWidth
-        }).then(canvas => {
-            // Restore sticky and scroll
-            stickyEls.forEach(el => { el.style.position = el._origPosition || ''; });
-            tableWrap.style.overflow = origOverflow;
-            tableWrap.scrollLeft = savedScrollLeft;
-
-            const imgData = canvas.toDataURL('image/jpeg', 0.92);
-            const imgW = canvas.width;
+        try {
+            const empIds = Object.keys(employeeDatabase);
+            let pagesHtml = '';
+            for (let i = 0; i < empIds.length; i++) {
+                const empId = empIds[i];
+                offscreen.innerHTML = buildSingleEmployeeReportHtml(empId, selectedMonth);
+                // let DOM paint before capture
+                await new Promise(res => setTimeout(res, 60));
+                const canvas = await html2canvas(offscreen, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 794, windowWidth: 794, scrollX: 0, scrollY: 0 });
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                pagesHtml += `<div class="a4-page">${employeeDatabase[empId]} (${empId})<img src="${imgData}" /></div>`;
+            }
+            offscreen.innerHTML = '';
 
             const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
-<title>হাজিরা রিপোর্ট — ${mName} ${currentYear}</title>
+<title>হাজিরা রিপোর্ট (সবাই) — ${mName} ${currentYear}</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { width:100%; background:#f0f0f0; font-family:sans-serif; }
+  @page { size: A4; margin: 0; }
+  html, body { width:100%; background:#e8eaed; font-family:sans-serif; }
   .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
-  .top-bar h2 { font-size:15px; font-weight:700; color:#90caf9; }
+  .top-bar h2 { font-size:14px; font-weight:700; color:#90caf9; }
   .top-bar span { font-size:12px; color:#b0bec5; }
-  .month-title { background:#1a73e8; color:white; width:100%; padding:10px 16px; text-align:center; font-size:16px; font-weight:800; letter-spacing:1px; }
-  .zoom-hint { background:#e8f0fe; color:#1a56c4; font-size:12px; font-weight:600; padding:8px 16px; width:100%; text-align:center; }
-  .sheet-wrap { overflow:auto; width:100%; padding:12px; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y pinch-zoom; }
-  img { display:block; height:auto; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,0.15); }
   .print-btn { display:block; margin:16px auto; background:#1a73e8; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; }
+  .a4-page { width:210mm; min-height:297mm; background:white; margin:16px auto; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:10mm; box-sizing:border-box; font-size:0; color:transparent; page-break-after:always; }
+  .a4-page img { width:100%; height:auto; display:block; }
   @media print {
-    .top-bar, .zoom-hint, .print-btn { display:none !important; }
+    .top-bar, .print-btn { display:none !important; }
     body { background:white; }
-    .sheet-wrap { padding:0; overflow:visible; }
-    img { max-width:100%; width:100%; height:auto; border-radius:0; box-shadow:none; }
+    .a4-page { margin:0; box-shadow:none; width:210mm; min-height:297mm; padding:10mm; }
+    .a4-page:last-child { page-break-after: auto; }
   }
 </style></head><body>
-<div class="top-bar"><h2>📋 হাজিরা রিপোর্ট — ${mName} ${currentYear}</h2><span>চিমটি দিয়ে zoom করুন</span></div>
-<div class="month-title">📅 ${mName} ${currentYear} — মাসিক হাজিরা রিপোর্ট</div>
-<div class="zoom-hint">🤏 মোবাইলে: দুই আঙুলে Zoom করুন &nbsp;|&nbsp; PC-তে: Ctrl + Scroll বা Print করুন</div>
-<div class="sheet-wrap"><img src="${imgData}" style="width:${imgW}px; max-width:none;" /></div>
+<div class="top-bar"><h2>📋 হাজিরা রিপোর্ট (সবাই, A–Z) — ${mName} ${currentYear}</h2><span>প্রতিটি কর্মচারীর জন্য আলাদা A4 পেজ</span></div>
+${pagesHtml}
 <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
 </body></html>`;
 
@@ -868,16 +928,14 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `Attendance_${mName}_${currentYear}.html`;
+            link.download = `Attendance_All_A4_${mName}_${currentYear}.html`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             setTimeout(() => URL.revokeObjectURL(url), 3000);
-            showToast('✅ PDF ডাউনলোড সফল! ব্রাউজারে খুলুন ও Print করুন।', 'success');
-        }).catch(() => {
-            stickyEls.forEach(el => { el.style.position = el._origPosition || ''; });
-            tableWrap.style.overflow = origOverflow;
-            tableWrap.scrollLeft = savedScrollLeft;
+            showToast('✅ A4 রিপোর্ট ডাউনলোড সফল! খুলে Print/Save as PDF করুন।', 'success');
+        } catch (err) {
+            offscreen.innerHTML = '';
             showToast('❌ PDF তৈরিতে ত্রুটি হয়েছে।', 'error');
-        });
+        }
     }
 
     function downloadJPG() {
@@ -893,6 +951,199 @@
         }).catch(() => { showToast('❌ JPG তৈরিতে ত্রুটি হয়েছে।', 'error'); });
     }
     // ===== END DOWNLOAD DROPDOWN LOGIC =====
+
+    // ===== SINGLE EMPLOYEE A4 REPORT LOGIC =====
+    function initSingleEmployeeReport() {
+        const empSel = document.getElementById('singleEmpId');
+        const monthSel = document.getElementById('singleEmpMonth');
+        const namePreview = document.getElementById('singleEmpNamePreview');
+        const btnPdf = document.getElementById('btnSingleEmpPdf');
+        const btnPng = document.getElementById('btnSingleEmpPng');
+        if (!empSel) return;
+
+        monthSel.value = new Date().getMonth() + 1;
+
+        function updateNamePreview() {
+            const empId = empSel.value;
+            if (empId && employeeDatabase[empId]) {
+                namePreview.innerHTML = `👤 নাম: <b>${employeeDatabase[empId]}</b> &nbsp;|&nbsp; আইডি: <b>${empId}</b>`;
+            } else {
+                namePreview.innerHTML = '👤 নাম: — (উপরে থেকে কর্মচারী নির্বাচন করুন)';
+            }
+        }
+        empSel.addEventListener('change', updateNamePreview);
+        updateNamePreview();
+
+        btnPdf.addEventListener('click', () => generateSingleEmployeeA4('pdf'));
+        btnPng.addEventListener('click', () => generateSingleEmployeeA4('png'));
+    }
+
+    function buildSingleEmployeeReportHtml(empId, month) {
+        const empName = employeeDatabase[empId];
+        const currentYear = new Date().getFullYear();
+        const daysInMonth = new Date(currentYear, month, 0).getDate();
+        const monthNames = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+        const mName = monthNames[month - 1];
+
+        const empLogs = globalAttendanceLogs.filter(log => {
+            if (log.id !== empId || !log.rawDate) return false;
+            return (new Date(log.rawDate).getMonth() + 1) === month;
+        });
+        let monthDaysData = {};
+        empLogs.forEach(log => { const d = new Date(log.rawDate).getDate(); monthDaysData[d] = log; });
+
+        const appSett = getAppSettings();
+        const [offStartH, offStartM] = (appSett.startTime || '11:00').split(':').map(Number);
+        const [offEndH, offEndM] = (appSett.endTime || '20:00').split(':').map(Number);
+        const officeStartTotalMin = offStartH * 60 + offStartM;
+        const officeEndTotalMin = offEndH * 60 + offEndM;
+
+        let pCount = 0, aCount = 0, offCount = 0;
+        let totalLateMinutes = 0, totalEarlyMinutes = 0;
+        let rowsHtml = '';
+        for (let d = 1; d <= daysInMonth; d++) {
+            const tempDate = new Date(currentYear, month - 1, d);
+            const dayName = banglaDays[tempDate.getDay()];
+            const log = monthDaysData[d];
+            let statusCell = '<span style="color:#ccc;">—</span>';
+            let inCell = '—', outCell = '—';
+            let lateCell = '<span style="color:#ccc;">—</span>', earlyCell = '<span style="color:#ccc;">—</span>';
+            if (log) {
+                if (log.status === 'Off Day') { offCount++; statusCell = '<span style="color:#1a73e8;font-weight:bold;">Off Day</span>'; }
+                else if (log.status === 'Absent') { aCount++; statusCell = '<span style="color:#c5221f;font-weight:bold;">Absent</span>'; }
+                else {
+                    pCount++;
+                    statusCell = log.status === 'Present' ? '<span style="color:#137333;font-weight:bold;">Present</span>' : '<span style="color:#b06000;font-weight:bold;">Late</span>';
+                    inCell = log.time || '—'; outCell = log.exitTime || '—';
+                    if (log.time) {
+                        const entryMin = parseTime12hToMinutes(log.time);
+                        if (entryMin !== null) {
+                            const lateMin = entryMin - officeStartTotalMin;
+                            if (lateMin > 0) { totalLateMinutes += lateMin; lateCell = `<span style="color:#b06000;font-weight:bold;">${lateMin} মি.</span>`; }
+                            else { lateCell = '<span style="color:#137333;">০ মি.</span>'; }
+                        }
+                    }
+                    if (log.exitTime && log.exitTime.trim() !== '') {
+                        const exitMin = parseTime12hToMinutes(log.exitTime);
+                        if (exitMin !== null) {
+                            const earlyMin = officeEndTotalMin - exitMin;
+                            if (earlyMin > 0) { totalEarlyMinutes += earlyMin; earlyCell = `<span style="color:#c5221f;font-weight:bold;">${earlyMin} মি.</span>`; }
+                            else { earlyCell = '<span style="color:#137333;">০ মি.</span>'; }
+                        }
+                    }
+                }
+            }
+            rowsHtml += `<tr><td>${d}</td><td>${dayName}</td><td>${statusCell}</td><td>${inCell}</td><td>${outCell}</td><td>${lateCell}</td><td>${earlyCell}</td></tr>`;
+        }
+
+        const salaryKey = `${empId}_${month}_${currentYear}`;
+        const savedSalary = globalSalaries[salaryKey] || 0;
+        const baseSalary = parseFloat(savedSalary) || 0;
+        const perDayRate = baseSalary / daysInMonth;
+        const perMinuteRate = baseSalary / (daysInMonth * 9 * 60);
+        const absentDeduction = aCount * perDayRate;
+        const lateDeduction = totalLateMinutes * perMinuteRate;
+        const earlyDeduction = totalEarlyMinutes * perMinuteRate;
+        const totalDeduction = absentDeduction + lateDeduction + earlyDeduction;
+        const netSalary = baseSalary - totalDeduction;
+        const genDate = new Date();
+
+        return `
+            <div class="a4-header">
+                <h1>📋 মাসিক হাজিরা ও বেতন রিপোর্ট</h1>
+                <p>স্মার্ট হাজিরা সিস্টেম — Developed by সালমান</p>
+            </div>
+            <div class="a4-emp-box">
+                <div>👤 নাম: <b>${empName}</b></div>
+                <div>🆔 আইডি: <b>${empId}</b></div>
+                <div>📅 মাস: <b>${mName} ${currentYear}</b></div>
+            </div>
+            <table class="a4-table">
+                <thead><tr><th>তারিখ</th><th>বার</th><th>স্ট্যাটাস</th><th>ইন টাইম</th><th>আউট টাইম</th><th>লেট</th><th>আর্লি এক্সিট</th></tr></thead>
+                <tbody>${rowsHtml}</tbody>
+            </table>
+            <div class="a4-summary-row">
+                <div class="a4-summary-box" style="background:#e6f4ea; color:#137333;">উপস্থিত: ${pCount}</div>
+                <div class="a4-summary-box" style="background:#fce8e6; color:#c5221f;">অনুপস্থিত: ${aCount}</div>
+                <div class="a4-summary-box" style="background:#e8f0fe; color:#1a56c4;">অফ ডে: ${offCount}</div>
+            </div>
+            <div class="a4-summary-row">
+                <div class="a4-summary-box" style="background:#fffbea; color:#92400e;">মোট লেট: ${totalLateMinutes} মিনিট</div>
+                <div class="a4-summary-box" style="background:#eef4ff; color:#1e3a8a;">মোট আর্লি এক্সিট: ${totalEarlyMinutes} মিনিট</div>
+            </div>
+            <div class="a4-summary-row">
+                <div class="a4-summary-box" style="background:#f1f3f4; color:#3c4043;">বেসিক বেতন: ৳${Math.round(baseSalary).toLocaleString('bn-BD')}</div>
+                <div class="a4-summary-box" style="background:#fff4f4; color:#c5221f;">মোট কর্তন: ৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div>
+                <div class="a4-summary-box" style="background:#e6f4ea; color:#137333;">নেট বেতন: ৳${Math.round(netSalary).toLocaleString('bn-BD')}</div>
+            </div>
+            <div class="a4-footer">রিপোর্ট তৈরির তারিখ: ${genDate.getDate()}/${genDate.getMonth()+1}/${genDate.getFullYear()} — এই রিপোর্টটি সিস্টেম থেকে স্বয়ংক্রিয়ভাবে তৈরি হয়েছে।</div>
+        `;
+    }
+
+    function generateSingleEmployeeA4(mode) {
+        const empSel = document.getElementById('singleEmpId');
+        const monthSel = document.getElementById('singleEmpMonth');
+        const empId = empSel.value;
+        const month = parseInt(monthSel.value);
+        if (!empId) { showToast('❌ প্রথমে কর্মচারী নির্বাচন করুন!', 'error'); return; }
+
+        const offscreen = document.getElementById('a4ReportOffscreen');
+        offscreen.innerHTML = buildSingleEmployeeReportHtml(empId, month);
+
+        showToast(mode === 'pdf' ? '📄 A4 PDF তৈরি হচ্ছে...' : '🖼️ PNG তৈরি হচ্ছে...', 'success');
+
+        // Let the DOM paint before capturing
+        setTimeout(() => {
+            html2canvas(offscreen, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 794, windowWidth: 794, scrollX: 0, scrollY: 0 }).then(canvas => {
+                const empName = employeeDatabase[empId];
+                if (mode === 'png') {
+                    const link = document.createElement('a');
+                    link.download = `Attendance_${empName}_${empId}_Month${month}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                    showToast('✅ PNG ডাউনলোড সফল!', 'success');
+                } else {
+                    // A4 = 210mm x 297mm. Build a printable single-page HTML sized exactly to A4.
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
+<title>Attendance Report - ${empName}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  @page { size: A4; margin: 0; }
+  html, body { width:100%; background:#e8eaed; font-family:sans-serif; }
+  .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+  .top-bar h2 { font-size:14px; font-weight:700; color:#90caf9; }
+  .print-btn { display:block; margin:16px auto; background:#c5221f; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; }
+  .a4-page { width:210mm; min-height:297mm; background:white; margin:16px auto; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:10mm; box-sizing:border-box; }
+  .a4-page img { width:100%; height:auto; display:block; }
+  @media print {
+    .top-bar, .print-btn { display:none !important; }
+    body { background:white; }
+    .a4-page { margin:0; box-shadow:none; width:210mm; min-height:297mm; padding:10mm; }
+  }
+</style></head><body>
+<div class="top-bar"><h2>📄 A4 হাজিরা রিপোর্ট — ${empName} (${empId})</h2></div>
+<div class="a4-page"><img src="${imgData}" /></div>
+<button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+</body></html>`;
+                    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `Attendance_${empName}_${empId}_Month${month}.html`;
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(url), 3000);
+                    showToast('✅ A4 রিপোর্ট ডাউনলোড সফল! খুলে Print/Save as PDF করুন।', 'success');
+                }
+                offscreen.innerHTML = '';
+            }).catch(() => {
+                showToast('❌ রিপোর্ট তৈরিতে ত্রুটি হয়েছে।', 'error');
+                offscreen.innerHTML = '';
+            });
+        }, 80);
+    }
+    // ===== END SINGLE EMPLOYEE A4 REPORT LOGIC =====
 
     function getLocalDeviceId() {
         let devId = localStorage.getItem('office_app_device_token');
@@ -1003,7 +1254,7 @@
             const deductHtml = baseSalary > 0 ? `<div class="deduct-badge">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">অনুপস্থিত: ${Math.round(absentDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">আর্লি (${totalEarlyExitMinutes} মি.): ${Math.round(earlyExitDeduction).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
             const netHtml = baseSalary > 0 ? `<div class="net-badge">৳${Math.round(netSalary).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
             row.innerHTML = `<td class="meta-cell adm-sticky-id">${empId}</td><td class="meta-cell adm-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td>
-            <td class="salary-input-cell"><div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><input type="number" class="salary-input" id="sal_${empId}" value="${savedSalary}" placeholder="০" min="0" style="flex:1;"></div></td>
+            <td class="salary-input-cell"><div style="font-size:11px;font-weight:800;color:#1a73e8;margin-bottom:4px;white-space:nowrap;">👤 ${empName} (${empId})</div><div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><input type="number" class="salary-input" id="sal_${empId}" value="${savedSalary}" placeholder="০" min="0" style="flex:1;"></div></td>
             <td style="background:#e8f0fe; text-align:center; vertical-align:middle;"><button class="btn-save-salary" onclick="saveSalaryToFirebase('${empId}', ${selectedMonth}, ${currentYear}, this)" style="background:#34a853; color:white; border:none; border-radius:6px; padding:6px 10px; font-size:11px; font-weight:bold; cursor:pointer;">💾 সংরক্ষণ</button></td>
             <td style="background:#fffbea;text-align:center;min-width:110px;"><div style="font-size:12px;font-weight:800;color:#92400e;">${totalLateMinutes > 0 ? (baseSalary > 0 ? totalLateMinutes + ' min (' + Math.round(lateDeduction) + ' Tk)' : totalLateMinutes + ' min') : '—'}</div></td>
             <td style="background:#eef4ff;text-align:center;min-width:110px;"><div style="font-size:12px;font-weight:800;color:#1e3a8a;">${totalEarlyExitMinutes > 0 ? (baseSalary > 0 ? totalEarlyExitMinutes + ' min (' + Math.round(earlyExitDeduction) + ' Tk)' : totalEarlyExitMinutes + ' min') : '—'}</div></td>
@@ -1248,7 +1499,7 @@
             const deductHtml = baseSalary > 0 ? `<div class="deduct-badge" style="color:#c5221f;font-weight:bold;font-size:12px;">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;margin-top:2px;">অনুপস্থিত: ${Math.round(absentDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;">আর্লি (${totalEarlyMinutes} মি.): ${Math.round(earlyDeduction).toLocaleString('bn-BD')}</div>` : `—`;
             const netHtml = baseSalary > 0 ? `৳${Math.round(netSalary).toLocaleString('bn-BD')}` : `—`;
             const row = document.createElement('tr');
-            row.innerHTML = `<td class="meta-cell pub-sticky-id">${empId}</td><td class="meta-cell pub-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td><td class="pub-salary-cell">${salaryHtml}</td>
+            row.innerHTML = `<td class="meta-cell pub-sticky-id">${empId}</td><td class="meta-cell pub-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td><td class="pub-salary-cell"><div style="font-size:9px;font-weight:800;color:#1a73e8;margin-bottom:2px;white-space:nowrap;">👤 ${empName}</div>${salaryHtml}</td>
             <td style="background:#fffbea;text-align:center;min-width:110px;">${pubLateHtml}</td><td style="background:#eef4ff;text-align:center;min-width:110px;">${pubEarlyHtml}</td>
             <td class="pub-deduct-cell">${deductHtml}</td><td class="pub-net-cell">${netHtml}</td>`;
             publicSheetTableBody.appendChild(row);
