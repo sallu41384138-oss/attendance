@@ -230,7 +230,7 @@
         <p style="font-size: 12px; color: #666; margin-top:-5px;">মাস ও বছর নির্বাচন করে নতুন নাম লিখে সংরক্ষণ করুন। পুরনো মাসের রেকর্ডে পুরনো নামই থাকবে।</p>
         <div class="admin-grid">
             <select id="renameEmpId" class="admin-input">
-                <option value="">কর্মচারী নির্বাচন করুন...</option>
+                <option value="">আইডি নির্বাচন করুন...</option>
             </select>
             <select id="renameMonth" class="admin-input">
                 <option value="1">জানুয়ারি</option>
@@ -392,7 +392,10 @@
         const key = `${empId}_${year}_${month}`;
         nameOverrideRef.child(key).set(newName).then(() => {
             showRenameMsg('✅ নাম সফলভাবে সংরক্ষণ হয়েছে (সব ডিভাইসে আপডেট হবে)', 'success');
-            refreshAllEmployeeDropdowns();
+            setTimeout(() => {
+                refreshAllEmployeeDropdowns();
+                if (typeof renderDeviceDashboard === 'function') renderDeviceDashboard();
+            }, 500);
         }).catch(err => {
             showRenameMsg('❌ সংরক্ষণ ব্যর্থ: ' + err.message, 'error');
         });
@@ -413,7 +416,7 @@
         const currentMonth = now.getMonth() + 1;
         const currentYear = now.getFullYear();
         
-        // ১. ম্যানুয়াল এন্ট্রি ড্রপডাউন
+        // ১. ম্যানুয়াল এন্ট্রি ড্রপডাউন (নাম + আইডি)
         const manualSelect = document.getElementById('manualEmpId');
         if (manualSelect) {
             const currentValue = manualSelect.value;
@@ -428,7 +431,7 @@
             manualSelect.value = currentValue;
         }
         
-        // ২. একক কর্মচারী রিপোর্ট ড্রপডাউন
+        // ২. একক কর্মচারী রিপোর্ট ড্রপডাউন (নাম + আইডি)
         const singleSelect = document.getElementById('singleEmpId');
         if (singleSelect) {
             const currentValue = singleSelect.value;
@@ -444,18 +447,15 @@
             singleSelect.value = currentValue;
         }
         
-        // ৩. নাম পরিবর্তন সেকশনের ড্রপডাউন
+        // ৩. নাম পরিবর্তন সেকশনের ড্রপডাউন (⚠️ শুধু আইডি)
         const renameSelect = document.getElementById('renameEmpId');
         if (renameSelect) {
             const currentValue = renameSelect.value;
-            const renameMonth = parseInt(document.getElementById('renameMonth')?.value) || currentMonth;
-            const renameYear = parseInt(document.getElementById('renameYear')?.value) || currentYear;
-            renameSelect.innerHTML = '<option value="">কর্মচারী নির্বাচন করুন...</option>';
+            renameSelect.innerHTML = '<option value="">আইডি নির্বাচন করুন...</option>';
             Object.keys(employeeDatabase).forEach(empId => {
-                const name = getEmployeeName(empId, renameMonth, renameYear);
                 const opt = document.createElement('option');
                 opt.value = empId;
-                opt.textContent = `${name} (${empId})`;
+                opt.textContent = empId;  // শুধু আইডি
                 renameSelect.appendChild(opt);
             });
             renameSelect.value = currentValue;
@@ -674,11 +674,9 @@
         initSingleEmployeeReport();
         initRenameSection();
         
-        // বছর ডিফল্ট সেট করুন
         const renameYearInput = document.getElementById('renameYear');
         if (renameYearInput) renameYearInput.value = new Date().getFullYear();
         
-        // ড্রপডাউন প্রথমবার রিফ্রেশ
         setTimeout(refreshAllEmployeeDropdowns, 500);
     });
     
@@ -696,10 +694,6 @@
             const newName = document.getElementById('renameNewName').value.trim();
             saveEmployeeNameOverride(empId, month, year, newName);
         });
-        
-        // মাস/বছর পরিবর্তন হলে ড্রপডাউন রিফ্রেশ করুন
-        if (monthSelect) monthSelect.addEventListener('change', refreshAllEmployeeDropdowns);
-        if (yearInput) yearInput.addEventListener('change', refreshAllEmployeeDropdowns);
     }
 
     function initDownloadDropdown() {
