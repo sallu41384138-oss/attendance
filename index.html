@@ -10,250 +10,69 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            margin: 0;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-        .attendance-card, .admin-login-card, .report-container {
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            max-width: 100%;
-            width: 100%;
-            margin-bottom: 25px;
-            box-sizing: border-box;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; }
+        .attendance-card, .admin-login-card, .report-container { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-width: 100%; width: 100%; margin-bottom: 25px; box-sizing: border-box; }
         .attendance-card { max-width: 380px; text-align: center; position: relative; }
         .admin-login-card { max-width: 380px; text-align: center; display: none; }
-        
         h2 { color: #1a73e8; margin-bottom: 8px; font-size: 24px; margin-top: 0; }
         h3 { color: #3c4043; margin-top: 0; font-size: 18px; }
         p.info { color: #5f6368; font-size: 14px; margin-bottom: 25px; }
-        
-        .emp-input, .admin-input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            font-size: 15px;
-            outline: none;
-            box-sizing: border-box;
-        }
-
-        .btn-submit {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
+        .emp-input, .admin-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #dadce0; border-radius: 8px; font-size: 15px; outline: none; box-sizing: border-box; }
+        .btn-submit { background-color: #1a73e8; color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: background-color 0.2s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
         .btn-submit:active { background-color: #1557b0; }
         .btn-submit:disabled { background-color: #bcc1c8; cursor: not-allowed; }
-        
-        .secret-dot {
-            color: #aaa;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 15px;
-            display: inline-block;
-            user-select: none;
-        }
-
-        #responseMessage {
-            margin-top: 15px;
-            font-weight: 600;
-            font-size: 14px;
-            padding: 12px;
-            border-radius: 8px;
-            display: none;
-        }
+        .secret-dot { color: #aaa; font-size: 16px; cursor: pointer; margin-top: 15px; display: inline-block; user-select: none; }
+        #responseMessage { margin-top: 15px; font-weight: 600; font-size: 14px; padding: 12px; border-radius: 8px; display: none; }
         .success { background-color: #e6f4ea; color: #137333; }
         .error { background-color: #fce8e6; color: #c5221f; }
         .loading { background-color: #f1f3f4; color: #3c4043; }
-
-        .excel-filter-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f8f9fa;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #dee2e6;
-        }
-        .month-dropdown {
-            padding: 8px 12px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 6px;
-            border: 1px solid #ccd0d5;
-            background: white;
-            color: #1a73e8;
-        }
-        
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-        }
-        
+        .excel-filter-area { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6; }
+        .month-dropdown { padding: 8px 12px; font-size: 14px; font-weight: bold; border-radius: 6px; border: 1px solid #ccd0d5; background: white; color: #1a73e8; }
+        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #dee2e6; border-radius: 6px; }
         table { width: 100%; border-collapse: collapse; text-align: center; font-size: 11px; background: white; min-width: 2600px; }
         th, td { padding: 8px 6px; border: 1px solid #dcdcdc; vertical-align: middle; }
         th { background-color: #f1f3f4; color: #3c4043; font-weight: bold; }
-        
         .day-subtext { display: block; font-size: 10px; color: #65676b; font-weight: normal; margin-top: 2px; }
         .meta-cell { text-align: left; background-color: #fafafa; font-weight: bold; padding-left: 8px; }
-        
         .time-box-container { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; }
         .grid-time-in { color: #137333; font-weight: bold; font-size: 10px; background: #e6f4ea; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
         .grid-time-late { color: #b06000; font-weight: bold; font-size: 10px; background: #fff4e5; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
         .grid-time-out { color: #1a73e8; font-weight: bold; font-size: 10px; background: #e8f0fe; padding: 2px 4px; border-radius: 4px; display: inline-block; width: 65px; text-align: center; }
         .grid-a { color: #c5221f; font-weight: bold; font-size: 12px; }
         .grid-empty { color: #ccc; font-size: 11px; }
-
-        .today-highlight {
-            background-color: #eaf2fd !important;
-            border-left: 2px solid #1a73e8 !important;
-            border-right: 2px solid #1a73e8 !important;
-            font-weight: bold;
-        }
+        .today-highlight { background-color: #eaf2fd !important; border-left: 2px solid #1a73e8 !important; border-right: 2px solid #1a73e8 !important; font-weight: bold; }
         th.today-highlight { background-color: #1a73e8 !important; color: white !important; }
         th.today-highlight .day-subtext { color: #d2e3fc !important; }
-
         .summary-badge-p { background-color: #e6f4ea; color: #137333; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
         .summary-badge-a { background-color: #fce8e6; color: #c5221f; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
-
-        /* ===== DOWNLOAD DROPDOWN ===== */
-        .download-dropdown-wrapper {
-            position: relative;
-            display: inline-block;
-        }
-        .btn-download-main {
-            background-color: #34a853;
-            color: white;
-            border: none;
-            padding: 8px 10px 8px 12px;
-            font-size: 13px;
-            font-weight: bold;
-            border-radius: 6px 0 0 6px;
-            cursor: pointer;
-            touch-action: manipulation;
-            border-right: 1px solid rgba(255,255,255,0.3);
-        }
-        .btn-download-arrow {
-            background-color: #2d9248;
-            color: white;
-            border: none;
-            padding: 8px 10px;
-            font-size: 12px;
-            font-weight: bold;
-            border-radius: 0 6px 6px 0;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
+        .download-dropdown-wrapper { position: relative; display: inline-block; }
+        .btn-download-main { background-color: #34a853; color: white; border: none; padding: 8px 10px 8px 12px; font-size: 13px; font-weight: bold; border-radius: 6px 0 0 6px; cursor: pointer; touch-action: manipulation; border-right: 1px solid rgba(255,255,255,0.3); }
+        .btn-download-arrow { background-color: #2d9248; color: white; border: none; padding: 8px 10px; font-size: 12px; font-weight: bold; border-radius: 0 6px 6px 0; cursor: pointer; touch-action: manipulation; }
         .btn-download-arrow:hover, .btn-download-main:hover { background-color: #2d9248; }
         .btn-download-arrow:hover { background-color: #267a3e; }
-        .download-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
-            margin-top: 4px;
-            background: white;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-            z-index: 999;
-            min-width: 160px;
-            overflow: hidden;
-        }
+        .download-menu { display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: white; border: 1px solid #dadce0; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 999; min-width: 160px; overflow: hidden; }
         .download-menu.open { display: block; }
-        .download-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 11px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #3c4043;
-            cursor: pointer;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            transition: background 0.15s;
-        }
+        .download-menu-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 13px; font-weight: 600; color: #3c4043; cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: background 0.15s; }
         .download-menu-item:hover { background: #f1f3f4; }
         .download-menu-item .dl-icon { font-size: 16px; width: 20px; text-align: center; }
         .download-menu-divider { height: 1px; background: #e8eaed; margin: 2px 0; }
-        /* ===== END DOWNLOAD DROPDOWN ===== */
-        
         .admin-section { display: none; width: 100%; max-width: 100%; }
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .btn-delete { background-color: transparent; color: #c5221f; border: none; cursor: pointer; font-size: 12px; padding: 0 2px; font-weight: bold; vertical-align: middle; touch-action: manipulation;}
-        
         .device-table { min-width: 100% !important; font-size: 13px; }
         .btn-reset-dev { background-color: #fff4e5; color: #b06000; border: 1px solid #ff9800; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; touch-action: manipulation; transition: 0.2s; }
         .btn-reset-dev:active { background-color: #ffe0b2; }
-
         .salary-input-cell { min-width: 150px; background-color: #f0f7ff; }
-        .salary-input {
-            width: 80px; padding: 4px 6px; border: 1px solid #1a73e8; border-radius: 5px;
-            font-size: 12px; font-weight: bold; color: #1a73e8; text-align: center;
-            outline: none; background: white;
-        }
-        .btn-save-salary {
-            background: #1a73e8; color: white; border: none; border-radius: 6px;
-            padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer;
-            transition: 0.2s; touch-action: manipulation;
-        }
+        .salary-input { width: 80px; padding: 4px 6px; border: 1px solid #1a73e8; border-radius: 5px; font-size: 12px; font-weight: bold; color: #1a73e8; text-align: center; outline: none; background: white; }
+        .btn-save-salary { background: #1a73e8; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; touch-action: manipulation; }
         .btn-save-salary:active { background: #0d47a1; }
         .salary-deduct-cell { background-color: #fff4f4; min-width: 80px; }
         .salary-net-cell { background-color: #f0faf0; min-width: 80px; }
         .deduct-badge { color: #c5221f; font-weight: bold; font-size: 12px; }
         .net-badge { color: #137333; font-weight: bold; font-size: 13px; }
         .deduct-detail { font-size: 9px; color: #888; margin-top: 2px; }
-
-        .public-report-container {
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            max-width: 100%;
-            width: 100%;
-            margin-bottom: 25px;
-            box-sizing: border-box;
-        }
-        .public-badge-readonly {
-            display: inline-block;
-            background: #e8f0fe;
-            color: #1a73e8;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 3px 9px;
-            border-radius: 12px;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
+        .public-report-container { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-width: 100%; width: 100%; margin-bottom: 25px; box-sizing: border-box; }
+        .public-badge-readonly { display: inline-block; background: #e8f0fe; color: #1a73e8; font-size: 11px; font-weight: bold; padding: 3px 9px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
         .pub-sticky-id { position: sticky; left: 0; z-index: 2; background: #fafafa; }
         .pub-sticky-name { position: sticky; left: 62px; z-index: 2; background: #fafafa; }
         thead .pub-sticky-id, thead .pub-sticky-name { background: #f1f3f4; z-index: 3; }
@@ -266,108 +85,29 @@
         .adm-sticky-id { position: sticky; left: 0; z-index: 2; background: #fff; }
         .adm-sticky-name { position: sticky; left: 62px; z-index: 2; background: #fff; }
         thead .adm-sticky-id, thead .adm-sticky-name { background: #f1f3f4; z-index: 3; }
-
-        .settings-container {
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            max-width: 520px;
-            width: 100%;
-            margin: 0 auto 25px auto;
-            box-sizing: border-box;
-        }
-        .settings-title {
-            font-size: 17px;
-            font-weight: 800;
-            color: #3c4043;
-            margin-bottom: 16px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e8eaed;
-        }
+        .settings-container { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-width: 520px; width: 100%; margin: 0 auto 25px auto; box-sizing: border-box; }
+        .settings-title { font-size: 17px; font-weight: 800; color: #3c4043; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e8eaed; }
         .settings-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
         .settings-row .settings-group { flex: 1; min-width: 130px; }
         .settings-group { margin-bottom: 14px; }
-        .settings-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 700;
-            color: #5f6368;
-            margin-bottom: 5px;
-        }
-        .settings-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #3c4043;
-            background: #fff;
-            outline: none;
-            box-sizing: border-box;
-            transition: border 0.15s;
-        }
+        .settings-label { display: block; font-size: 12px; font-weight: 700; color: #5f6368; margin-bottom: 5px; }
+        .settings-input { width: 100%; padding: 10px 12px; border: 1px solid #dadce0; border-radius: 8px; font-size: 14px; color: #3c4043; background: #fff; outline: none; box-sizing: border-box; transition: border 0.15s; }
         .settings-input:focus { border-color: #1a73e8; }
         .settings-input:disabled { background: #f1f3f4; color: #80868b; }
-        .btn-settings-save {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 11px 22px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            touch-action: manipulation;
-        }
+        .btn-settings-save { background-color: #1a73e8; color: white; border: none; padding: 11px 22px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; touch-action: manipulation; }
         .btn-settings-save:hover { background-color: #1557b0; }
         .btn-settings-save:active { background-color: #0d47a1; }
-        .btn-pwd-change {
-            background-color: #f1f3f4;
-            color: #3c4043;
-            border: 1px solid #dadce0;
-            padding: 11px 22px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            touch-action: manipulation;
-        }
+        .btn-pwd-change { background-color: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; padding: 11px 22px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; touch-action: manipulation; }
         .btn-pwd-change:hover { background-color: #e8eaed; }
         .settings-divider { border: none; border-top: 1px solid #e8eaed; margin: 18px 0; }
         .settings-helper { font-size: 12px; color: #80868b; margin-top: 5px; }
-        .gps-info-box {
-            background: #e8f0fe;
-            border: 1px solid #c7d8fc;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 13px;
-            color: #1a56c4;
-            margin-bottom: 14px;
-        }
+        .gps-info-box { background: #e8f0fe; border: 1px solid #c7d8fc; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #1a56c4; margin-bottom: 14px; }
         .gps-map-link { font-size: 13px; color: #1a73e8; text-decoration: none; display: inline-block; margin-bottom: 14px; font-weight: bold; }
         .gps-map-link:hover { text-decoration: underline; }
-        .settings-msg {
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 12px;
-            display: none;
-        }
+        .settings-msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-top: 12px; display: none; }
         .settings-msg.success { background: #e6f4ea; color: #137333; }
         .settings-msg.error { background: #fce8e6; color: #c5221f; }
-
-        .gps-live-card {
-            background: #f1f3f4;
-            border: 1.5px solid #dadce0;
-            border-radius: 12px;
-            padding: 14px 16px;
-            margin-bottom: 12px;
-            transition: background 0.3s, border-color 0.3s;
-        }
+        .gps-live-card { background: #f1f3f4; border: 1.5px solid #dadce0; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; transition: background 0.3s, border-color 0.3s; }
         .gps-live-card.gps-inside  { background: #e6f4ea; border-color: #81c995; }
         .gps-live-card.gps-outside { background: #fce8e6; border-color: #f28b82; }
         .gps-live-card.gps-error   { background: #fff8e1; border-color: #fdd663; }
@@ -393,47 +133,20 @@
         .gps-spinner { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #5f6368; }
         .gps-spin-icon { width: 14px; height: 14px; border: 2px solid #dadce0; border-top-color: #1a73e8; border-radius: 50%; animation: spin-gps .7s linear infinite; }
         @keyframes spin-gps { to { transform: rotate(360deg); } }
-
-        .click-limit-alert {
-            background: #fce8e6; color: #c5221f; border: 1px solid #f28b82;
-            border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600;
-            margin-bottom: 12px; display: none;
-        }
-        
-        .toast-message {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #137333; color: white; padding: 10px 20px; border-radius: 8px;
-            font-size: 14px; font-weight: bold; z-index: 9999;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); white-space: nowrap;
-            animation: fadeInOut 3s ease-in-out;
-        }
+        .click-limit-alert { background: #fce8e6; color: #c5221f; border: 1px solid #f28b82; border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; margin-bottom: 12px; display: none; }
+        .toast-message { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #137333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.2); white-space: nowrap; animation: fadeInOut 3s ease-in-out; }
         .toast-message.error { background: #c5221f; }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translateX(-50%) translateY(20px); } 15% { opacity: 1; transform: translateX(-50%) translateY(0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(20px); } }
-
-        /* ===== SINGLE EMPLOYEE A4 REPORT ===== */
         .single-emp-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
         .single-emp-controls .settings-group { flex: 1; min-width: 150px; margin-bottom: 0; }
-        .single-emp-name-preview {
-            background: #e8f0fe; border: 1px solid #c7d8fc; border-radius: 8px;
-            padding: 10px 14px; font-size: 14px; font-weight: 700; color: #1a56c4; margin-bottom: 14px;
-        }
+        .single-emp-name-preview { background: #e8f0fe; border: 1px solid #c7d8fc; border-radius: 8px; padding: 10px 14px; font-size: 14px; font-weight: 700; color: #1a56c4; margin-bottom: 14px; }
         .single-emp-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-single-dl { flex: 1; min-width: 140px; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: bold; color: white; cursor: pointer; touch-action: manipulation; }
         .btn-single-pdf { background-color: #c5221f; }
         .btn-single-pdf:active { background-color: #a10000; }
         .btn-single-png { background-color: #7b1fa2; }
         .btn-single-png:active { background-color: #5c1580; }
-
-        #a4ReportOffscreen {
-            position: fixed;
-            top: -10000px;
-            left: -10000px;
-            width: 794px;
-            background: #ffffff;
-            padding: 30px;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        #a4ReportOffscreen { position: fixed; top: -10000px; left: -10000px; width: 794px; background: #ffffff; padding: 30px; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .a4-header { text-align: center; border-bottom: 3px solid #1a73e8; padding-bottom: 12px; margin-bottom: 16px; }
         .a4-header h1 { color: #1a73e8; font-size: 22px; margin: 0 0 4px 0; }
         .a4-header p { color: #5f6368; font-size: 12px; margin: 0; }
@@ -452,7 +165,6 @@
         .a4-summary-row { display: flex; gap: 10px; margin-top: 16px; }
         .a4-summary-box { flex: 1; border-radius: 8px; padding: 10px; text-align: center; font-size: 12px; font-weight: 700; }
         .a4-footer { margin-top: 20px; font-size: 10px; color: #999; text-align: center; }
-        /* ===== END SINGLE EMPLOYEE A4 REPORT ===== */
     </style>
 </head>
 <body>
@@ -472,9 +184,7 @@
     </div>
     <div class="click-limit-alert" id="clickLimitAlert">⛔ আপনি আজকের অফিস সেশনে ইতিমধ্যে ২ বার হাজিরা দিয়েছেন।</div>
     <div class="gps-live-card" id="gpsLiveCard">
-        <div class="gps-live-top">
-            <span class="gps-live-status" id="gpsLiveStatus"><span class="gps-spinner"><span class="gps-spin-icon"></span> লোকেশন যাচাই করা হচ্ছে...</span></span>
-        </div>
+        <div class="gps-live-top"><span class="gps-live-status" id="gpsLiveStatus"><span class="gps-spinner"><span class="gps-spin-icon"></span> লোকেশন যাচাই করা হচ্ছে...</span></span></div>
         <div class="gps-meters-row" id="gpsMetersRow" style="display:none;">
             <div class="gps-meter-box"><div class="gps-meter-label">অফিস থেকে দূরত্ব</div><div class="gps-meter-value" id="gpsDistanceVal">--</div><div class="gps-meter-label">মিটার</div></div>
             <div class="gps-meter-box"><div class="gps-meter-label">অনুমোদিত সীমা</div><div class="gps-meter-value" id="gpsRadiusVal">--</div><div class="gps-meter-label">মিটার</div></div>
@@ -513,6 +223,43 @@
         <p style="font-size: 12px; color: #666; margin-top:-5px;">কর্মচারী ফোন পরিবর্তন করলে বা প্রক্সি লক ক্লিয়ার করতে এখান থেকে "Reset Device" করুন।</p>
         <div class="table-responsive"><table class="device-table"><thead><tr style="background-color: #ffe0b2;"><th>আইডি</th><th>নাম</th><th>ডিভাইস লক স্ট্যাটাস</th><th>অ্যাকশন</th></tr></thead><tbody id="deviceTableBody"></tbody></table></div>
     </div>
+    
+    <!-- ===== কর্মচারীর নাম পরিবর্তন সেকশন ===== -->
+    <div class="report-container" style="max-width: 1000px; margin-left: auto; margin-right: auto; border: 1px solid #1a73e8;">
+        <h3 style="color: #1a73e8; font-weight: bold;">✏️ কর্মচারীর নাম পরিবর্তন (মাস অনুযায়ী)</h3>
+        <p style="font-size: 12px; color: #666; margin-top:-5px;">মাস ও বছর নির্বাচন করে নতুন নাম লিখে সংরক্ষণ করুন। পুরনো মাসের রেকর্ডে পুরনো নামই থাকবে।</p>
+        <div class="admin-grid">
+            <select id="renameEmpId" class="admin-input">
+                <option value="">কর্মচারী নির্বাচন করুন...</option>
+                <option value="1001">1001</option>
+                <option value="1002">1002</option>
+                <option value="1003">1003</option>
+                <option value="1004">1004</option>
+                <option value="1005">1005</option>
+            </select>
+            <select id="renameMonth" class="admin-input">
+                <option value="1">জানুয়ারি</option>
+                <option value="2">ফেব্রুয়ারি</option>
+                <option value="3">মার্চ</option>
+                <option value="4">এপ্রিল</option>
+                <option value="5">মে</option>
+                <option value="6">জুন</option>
+                <option value="7">জুলাই</option>
+                <option value="8">আগস্ট</option>
+                <option value="9">সেপ্টেম্বর</option>
+                <option value="10">অক্টোবর</option>
+                <option value="11">নভেম্বর</option>
+                <option value="12">ডিসেম্বর</option>
+            </select>
+        </div>
+        <div class="admin-grid">
+            <input type="text" id="renameNewName" class="admin-input" placeholder="নতুন নাম লিখুন">
+            <input type="number" id="renameYear" class="admin-input" placeholder="বছর" value="2025">
+        </div>
+        <button id="renameSaveBtn" class="btn-submit" style="background-color:#1a73e8;">✏️ নাম পরিবর্তন ও সংরক্ষণ</button>
+        <div id="rename-msg" class="settings-msg" style="margin-top:10px;"></div>
+    </div>
+    <!-- ===== END নাম পরিবর্তন সেকশন ===== -->
     
     <div class="report-container" style="background: #eaf2fd; max-width: 1000px; margin-left: auto; margin-right: auto;">
         <h3 style="color: #1a73e8; font-weight: bold;">🛠️ ম্যানুয়াল এন্ট্রি প্যানেল</h3>
@@ -555,8 +302,6 @@
                 <label for="monthFilter" style="font-weight: 600; color: #5f6368; margin-right: 8px;">মাস নির্বাচন:</label>
                 <select id="monthFilter" class="month-dropdown"><option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option><option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option><option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option><option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option></select>
             </div>
-
-            <!-- DOWNLOAD DROPDOWN -->
             <div class="download-dropdown-wrapper" id="downloadDropdownWrapper">
                 <button class="btn-download-main" id="downloadMainBtn">⬇ ডাউনলোড</button><button class="btn-download-arrow" id="downloadArrowBtn">▾</button>
                 <div class="download-menu" id="downloadMenu">
@@ -567,7 +312,6 @@
                     <button class="download-menu-item" id="dlJpgBtn"><span class="dl-icon">🖼️</span> JPG ছবি</button>
                 </div>
             </div>
-            <!-- END DOWNLOAD DROPDOWN -->
         </div>
         <div class="table-responsive" id="adminTableResponsive"><table id="sheetTable"><thead><tr id="tableHeaderRow"></tr></thead><tbody id="sheetTableBody"></tbody></table></div>
     </div>
@@ -595,7 +339,6 @@
     </div>
 </div>
 
-<!-- Offscreen A4 report render target -->
 <div id="a4ReportOffscreen"></div>
 
 <script>
@@ -621,6 +364,49 @@
     
     const clickLimitRef = db.ref('clickLimits');
     let globalClickLimits = {};
+    
+    // ===== EMPLOYEE NAME OVERRIDES (MONTH-WISE) =====
+    const nameOverrideRef = db.ref('employeeNameOverrides');
+    let globalNameOverrides = {};
+    
+    function loadNameOverridesFromFirebase() {
+        nameOverrideRef.on('value', (snapshot) => {
+            globalNameOverrides = snapshot.val() || {};
+            if (typeof generateTableHeader === 'function') generateTableHeader();
+            if (typeof renderSheetDashboard === 'function') renderSheetDashboard(globalAttendanceLogs);
+            if (typeof generatePublicTableHeader === 'function') generatePublicTableHeader();
+            if (typeof renderPublicSheetDashboard === 'function') renderPublicSheetDashboard(globalAttendanceLogs);
+        });
+    }
+    
+    function getEmployeeName(empId, month, year) {
+        const key = `${empId}_${year}_${month}`;
+        if (globalNameOverrides[key]) return globalNameOverrides[key];
+        return employeeDatabase[empId] || empId;
+    }
+    
+    function saveEmployeeNameOverride(empId, month, year, newName) {
+        if (!empId || !newName || !month || !year) {
+            showRenameMsg('❌ সব তথ্য পূরণ করুন', 'error');
+            return;
+        }
+        const key = `${empId}_${year}_${month}`;
+        nameOverrideRef.child(key).set(newName).then(() => {
+            showRenameMsg('✅ নাম সফলভাবে সংরক্ষণ হয়েছে (সব ডিভাইসে আপডেট হবে)', 'success');
+        }).catch(err => {
+            showRenameMsg('❌ সংরক্ষণ ব্যর্থ: ' + err.message, 'error');
+        });
+    }
+    
+    function showRenameMsg(text, type) {
+        const el = document.getElementById('rename-msg');
+        if (!el) return;
+        el.textContent = text;
+        el.className = 'settings-msg ' + type;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+    // ===== END NAME OVERRIDES =====
 
     function loadAppSettingsFromFirebase() {
         db.ref('appSettings').once('value', (snapshot) => {
@@ -828,12 +614,25 @@
         attachSettingsListeners();
         loadSalariesFromFirebase();
         loadClickLimitsFromFirebase();
+        loadNameOverridesFromFirebase();
         startGpsWatch();
         initDownloadDropdown();
         initSingleEmployeeReport();
+        initRenameSection();
     });
+    
+    function initRenameSection() {
+        const btn = document.getElementById('renameSaveBtn');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            const empId = document.getElementById('renameEmpId').value;
+            const month = parseInt(document.getElementById('renameMonth').value);
+            const year = parseInt(document.getElementById('renameYear').value);
+            const newName = document.getElementById('renameNewName').value.trim();
+            saveEmployeeNameOverride(empId, month, year, newName);
+        });
+    }
 
-    // ===== DOWNLOAD DROPDOWN LOGIC =====
     function initDownloadDropdown() {
         const wrapper = document.getElementById('downloadDropdownWrapper');
         const menu = document.getElementById('downloadMenu');
@@ -850,92 +649,54 @@
             if (!wrapper.contains(e.target)) closeMenu();
         });
 
-        document.getElementById('dlExcelBtn').addEventListener('click', function() {
-            closeMenu(); downloadExcel();
-        });
-        document.getElementById('dlPdfBtn').addEventListener('click', function() {
-            closeMenu(); downloadPDF();
-        });
-        document.getElementById('dlJpgBtn').addEventListener('click', function() {
-            closeMenu(); downloadJPG();
-        });
+        document.getElementById('dlExcelBtn').addEventListener('click', function() { closeMenu(); downloadExcel(); });
+        document.getElementById('dlPdfBtn').addEventListener('click', function() { closeMenu(); downloadPDF(); });
+        document.getElementById('dlJpgBtn').addEventListener('click', function() { closeMenu(); downloadJPG(); });
     }
 
     function downloadExcel() {
         if (globalAttendanceLogs.length === 0) { alert("কোনো রেকর্ড নেই!"); return; }
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFআইডি,নাম,তারিখ,ইন টাইম,আউট টাইম,স্ট্যাটাস\n";
-        globalAttendanceLogs.forEach(log => {
-            csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.exitTime || '-'}","${log.status}"\n`;
-        });
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Attendance_Sheet_Month_${monthFilter.value}.csv`);
+        globalAttendanceLogs.forEach(log => { csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.exitTime || '-'}","${log.status}"\n`; });
+        const encodedUri = encodeURI(csvContent); const link = document.createElement("a");
+        link.setAttribute("href", encodedUri); link.setAttribute("download", `Attendance_Sheet_Month_${monthFilter.value}.csv`);
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
-    // Bulk PDF: one real A4-size page PER EMPLOYEE (A to Z / সব কর্মচারী), reusing the
-    // same detailed attendance+salary report builder used for the single-employee download.
     async function downloadPDF() {
         showToast('📄 সবার A4 রিপোর্ট তৈরি হচ্ছে...', 'success');
-
         const monthNames = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
         const selectedMonth = parseInt(monthFilter.value);
         const mName = monthNames[selectedMonth - 1];
         const currentYear = new Date().getFullYear();
         const offscreen = document.getElementById('a4ReportOffscreen');
-
         try {
             const empIds = Object.keys(employeeDatabase);
             let pagesHtml = '';
             for (let i = 0; i < empIds.length; i++) {
                 const empId = empIds[i];
                 offscreen.innerHTML = buildSingleEmployeeReportHtml(empId, selectedMonth);
-                // let DOM paint before capture
                 await new Promise(res => setTimeout(res, 60));
                 const canvas = await html2canvas(offscreen, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 794, windowWidth: 794, scrollX: 0, scrollY: 0 });
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                pagesHtml += `<div class="a4-page">${employeeDatabase[empId]} (${empId})<img src="${imgData}" /></div>`;
+                pagesHtml += `<div class="a4-page">${getEmployeeName(empId, selectedMonth, currentYear)} (${empId})<img src="${imgData}" /></div>`;
             }
             offscreen.innerHTML = '';
-
             const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
 <title>হাজিরা রিপোর্ট (সবাই) — ${mName} ${currentYear}</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  @page { size: A4; margin: 0; }
-  html, body { width:100%; background:#e8eaed; font-family:sans-serif; }
-  .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
-  .top-bar h2 { font-size:14px; font-weight:700; color:#90caf9; }
-  .top-bar span { font-size:12px; color:#b0bec5; }
-  .print-btn { display:block; margin:16px auto; background:#1a73e8; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; }
-  .a4-page { width:210mm; min-height:297mm; background:white; margin:16px auto; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:10mm; box-sizing:border-box; font-size:0; color:transparent; page-break-after:always; }
-  .a4-page img { width:100%; height:auto; display:block; }
-  @media print {
-    .top-bar, .print-btn { display:none !important; }
-    body { background:white; }
-    .a4-page { margin:0; box-shadow:none; width:210mm; min-height:297mm; padding:10mm; }
-    .a4-page:last-child { page-break-after: auto; }
-  }
-</style></head><body>
+<style>* { margin:0; padding:0; box-sizing:border-box; } @page { size: A4; margin: 0; } html, body { width:100%; background:#e8eaed; font-family:sans-serif; } .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; } .top-bar h2 { font-size:14px; font-weight:700; color:#90caf9; } .top-bar span { font-size:12px; color:#b0bec5; } .print-btn { display:block; margin:16px auto; background:#1a73e8; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; } .a4-page { width:210mm; min-height:297mm; background:white; margin:16px auto; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:10mm; box-sizing:border-box; font-size:0; color:transparent; page-break-after:always; } .a4-page img { width:100%; height:auto; display:block; } @media print { .top-bar, .print-btn { display:none !important; } body { background:white; } .a4-page { margin:0; box-shadow:none; width:210mm; min-height:297mm; padding:10mm; } .a4-page:last-child { page-break-after: auto; } }</style></head><body>
 <div class="top-bar"><h2>📋 হাজিরা রিপোর্ট (সবাই, A–Z) — ${mName} ${currentYear}</h2><span>প্রতিটি কর্মচারীর জন্য আলাদা A4 পেজ</span></div>
 ${pagesHtml}
 <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
 </body></html>`;
-
             const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Attendance_All_A4_${mName}_${currentYear}.html`;
+            const link = document.createElement('a'); link.href = url; link.download = `Attendance_All_A4_${mName}_${currentYear}.html`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             setTimeout(() => URL.revokeObjectURL(url), 3000);
             showToast('✅ A4 রিপোর্ট ডাউনলোড সফল! খুলে Print/Save as PDF করুন।', 'success');
-        } catch (err) {
-            offscreen.innerHTML = '';
-            showToast('❌ PDF তৈরিতে ত্রুটি হয়েছে।', 'error');
-        }
+        } catch (err) { offscreen.innerHTML = ''; showToast('❌ PDF তৈরিতে ত্রুটি হয়েছে।', 'error'); }
     }
 
     function downloadJPG() {
@@ -950,9 +711,7 @@ ${pagesHtml}
             showToast('✅ JPG ডাউনলোড সফল!', 'success');
         }).catch(() => { showToast('❌ JPG তৈরিতে ত্রুটি হয়েছে।', 'error'); });
     }
-    // ===== END DOWNLOAD DROPDOWN LOGIC =====
 
-    // ===== SINGLE EMPLOYEE A4 REPORT LOGIC =====
     function initSingleEmployeeReport() {
         const empSel = document.getElementById('singleEmpId');
         const monthSel = document.getElementById('singleEmpMonth');
@@ -960,44 +719,33 @@ ${pagesHtml}
         const btnPdf = document.getElementById('btnSingleEmpPdf');
         const btnPng = document.getElementById('btnSingleEmpPng');
         if (!empSel) return;
-
         monthSel.value = new Date().getMonth() + 1;
-
         function updateNamePreview() {
-            const empId = empSel.value;
-            if (empId && employeeDatabase[empId]) {
-                namePreview.innerHTML = `👤 নাম: <b>${employeeDatabase[empId]}</b> &nbsp;|&nbsp; আইডি: <b>${empId}</b>`;
-            } else {
-                namePreview.innerHTML = '👤 নাম: — (উপরে থেকে কর্মচারী নির্বাচন করুন)';
-            }
+            const empId = empSel.value; const m = parseInt(monthSel.value); const y = new Date().getFullYear();
+            if (empId && employeeDatabase[empId]) { namePreview.innerHTML = `👤 নাম: <b>${getEmployeeName(empId, m, y)}</b> &nbsp;|&nbsp; আইডি: <b>${empId}</b>`; }
+            else { namePreview.innerHTML = '👤 নাম: — (উপরে থেকে কর্মচারী নির্বাচন করুন)'; }
         }
         empSel.addEventListener('change', updateNamePreview);
+        monthSel.addEventListener('change', updateNamePreview);
         updateNamePreview();
-
         btnPdf.addEventListener('click', () => generateSingleEmployeeA4('pdf'));
         btnPng.addEventListener('click', () => generateSingleEmployeeA4('png'));
     }
 
     function buildSingleEmployeeReportHtml(empId, month) {
-        const empName = employeeDatabase[empId];
+        const empName = getEmployeeName(empId, month, new Date().getFullYear());
         const currentYear = new Date().getFullYear();
         const daysInMonth = new Date(currentYear, month, 0).getDate();
         const monthNames = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
         const mName = monthNames[month - 1];
-
-        const empLogs = globalAttendanceLogs.filter(log => {
-            if (log.id !== empId || !log.rawDate) return false;
-            return (new Date(log.rawDate).getMonth() + 1) === month;
-        });
+        const empLogs = globalAttendanceLogs.filter(log => { if (log.id !== empId || !log.rawDate) return false; return (new Date(log.rawDate).getMonth() + 1) === month; });
         let monthDaysData = {};
         empLogs.forEach(log => { const d = new Date(log.rawDate).getDate(); monthDaysData[d] = log; });
-
         const appSett = getAppSettings();
         const [offStartH, offStartM] = (appSett.startTime || '11:00').split(':').map(Number);
         const [offEndH, offEndM] = (appSett.endTime || '20:00').split(':').map(Number);
         const officeStartTotalMin = offStartH * 60 + offStartM;
         const officeEndTotalMin = offEndH * 60 + offEndM;
-
         let pCount = 0, aCount = 0, offCount = 0;
         let totalLateMinutes = 0, totalEarlyMinutes = 0;
         let rowsHtml = '';
@@ -1012,30 +760,14 @@ ${pagesHtml}
                 if (log.status === 'Off Day') { offCount++; statusCell = '<span style="color:#1a73e8;font-weight:bold;">Off Day</span>'; }
                 else if (log.status === 'Absent') { aCount++; statusCell = '<span style="color:#c5221f;font-weight:bold;">Absent</span>'; }
                 else {
-                    pCount++;
-                    statusCell = log.status === 'Present' ? '<span style="color:#137333;font-weight:bold;">Present</span>' : '<span style="color:#b06000;font-weight:bold;">Late</span>';
+                    pCount++; statusCell = log.status === 'Present' ? '<span style="color:#137333;font-weight:bold;">Present</span>' : '<span style="color:#b06000;font-weight:bold;">Late</span>';
                     inCell = log.time || '—'; outCell = log.exitTime || '—';
-                    if (log.time) {
-                        const entryMin = parseTime12hToMinutes(log.time);
-                        if (entryMin !== null) {
-                            const lateMin = entryMin - officeStartTotalMin;
-                            if (lateMin > 0) { totalLateMinutes += lateMin; lateCell = `<span style="color:#b06000;font-weight:bold;">${lateMin} মি.</span>`; }
-                            else { lateCell = '<span style="color:#137333;">০ মি.</span>'; }
-                        }
-                    }
-                    if (log.exitTime && log.exitTime.trim() !== '') {
-                        const exitMin = parseTime12hToMinutes(log.exitTime);
-                        if (exitMin !== null) {
-                            const earlyMin = officeEndTotalMin - exitMin;
-                            if (earlyMin > 0) { totalEarlyMinutes += earlyMin; earlyCell = `<span style="color:#c5221f;font-weight:bold;">${earlyMin} মি.</span>`; }
-                            else { earlyCell = '<span style="color:#137333;">০ মি.</span>'; }
-                        }
-                    }
+                    if (log.time) { const entryMin = parseTime12hToMinutes(log.time); if (entryMin !== null) { const lateMin = entryMin - officeStartTotalMin; if (lateMin > 0) { totalLateMinutes += lateMin; lateCell = `<span style="color:#b06000;font-weight:bold;">${lateMin} মি.</span>`; } else { lateCell = '<span style="color:#137333;">০ মি.</span>'; } } }
+                    if (log.exitTime && log.exitTime.trim() !== '') { const exitMin = parseTime12hToMinutes(log.exitTime); if (exitMin !== null) { const earlyMin = officeEndTotalMin - exitMin; if (earlyMin > 0) { totalEarlyMinutes += earlyMin; earlyCell = `<span style="color:#c5221f;font-weight:bold;">${earlyMin} মি.</span>`; } else { earlyCell = '<span style="color:#137333;">০ মি.</span>'; } } }
                 }
             }
             rowsHtml += `<tr><td>${d}</td><td>${dayName}</td><td>${statusCell}</td><td>${inCell}</td><td>${outCell}</td><td>${lateCell}</td><td>${earlyCell}</td></tr>`;
         }
-
         const salaryKey = `${empId}_${month}_${currentYear}`;
         const savedSalary = globalSalaries[salaryKey] || 0;
         const baseSalary = parseFloat(savedSalary) || 0;
@@ -1047,35 +779,13 @@ ${pagesHtml}
         const totalDeduction = absentDeduction + lateDeduction + earlyDeduction;
         const netSalary = baseSalary - totalDeduction;
         const genDate = new Date();
-
         return `
-            <div class="a4-header">
-                <h1>📋 মাসিক হাজিরা ও বেতন রিপোর্ট</h1>
-                <p>স্মার্ট হাজিরা সিস্টেম — Developed by সালমান</p>
-            </div>
-            <div class="a4-emp-box">
-                <div>👤 নাম: <b>${empName}</b></div>
-                <div>🆔 আইডি: <b>${empId}</b></div>
-                <div>📅 মাস: <b>${mName} ${currentYear}</b></div>
-            </div>
-            <table class="a4-table">
-                <thead><tr><th>তারিখ</th><th>বার</th><th>স্ট্যাটাস</th><th>ইন টাইম</th><th>আউট টাইম</th><th>লেট</th><th>আর্লি এক্সিট</th></tr></thead>
-                <tbody>${rowsHtml}</tbody>
-            </table>
-            <div class="a4-summary-row">
-                <div class="a4-summary-box" style="background:#e6f4ea; color:#137333;">উপস্থিত: ${pCount}</div>
-                <div class="a4-summary-box" style="background:#fce8e6; color:#c5221f;">অনুপস্থিত: ${aCount}</div>
-                <div class="a4-summary-box" style="background:#e8f0fe; color:#1a56c4;">অফ ডে: ${offCount}</div>
-            </div>
-            <div class="a4-summary-row">
-                <div class="a4-summary-box" style="background:#fffbea; color:#92400e;">মোট লেট: ${totalLateMinutes} মিনিট</div>
-                <div class="a4-summary-box" style="background:#eef4ff; color:#1e3a8a;">মোট আর্লি এক্সিট: ${totalEarlyMinutes} মিনিট</div>
-            </div>
-            <div class="a4-summary-row">
-                <div class="a4-summary-box" style="background:#f1f3f4; color:#3c4043;">বেসিক বেতন: ৳${Math.round(baseSalary).toLocaleString('bn-BD')}</div>
-                <div class="a4-summary-box" style="background:#fff4f4; color:#c5221f;">মোট কর্তন: ৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div>
-                <div class="a4-summary-box" style="background:#e6f4ea; color:#137333;">নেট বেতন: ৳${Math.round(netSalary).toLocaleString('bn-BD')}</div>
-            </div>
+            <div class="a4-header"><h1>📋 মাসিক হাজিরা ও বেতন রিপোর্ট</h1><p>স্মার্ট হাজিরা সিস্টেম — Developed by সালমান</p></div>
+            <div class="a4-emp-box"><div>👤 নাম: <b>${empName}</b></div><div>🆔 আইডি: <b>${empId}</b></div><div>📅 মাস: <b>${mName} ${currentYear}</b></div></div>
+            <table class="a4-table"><thead><tr><th>তারিখ</th><th>বার</th><th>স্ট্যাটাস</th><th>ইন টাইম</th><th>আউট টাইম</th><th>লেট</th><th>আর্লি এক্সিট</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+            <div class="a4-summary-row"><div class="a4-summary-box" style="background:#e6f4ea; color:#137333;">উপস্থিত: ${pCount}</div><div class="a4-summary-box" style="background:#fce8e6; color:#c5221f;">অনুপস্থিত: ${aCount}</div><div class="a4-summary-box" style="background:#e8f0fe; color:#1a56c4;">অফ ডে: ${offCount}</div></div>
+            <div class="a4-summary-row"><div class="a4-summary-box" style="background:#fffbea; color:#92400e;">মোট লেট: ${totalLateMinutes} মিনিট</div><div class="a4-summary-box" style="background:#eef4ff; color:#1e3a8a;">মোট আর্লি এক্সিট: ${totalEarlyMinutes} মিনিট</div></div>
+            <div class="a4-summary-row"><div class="a4-summary-box" style="background:#f1f3f4; color:#3c4043;">বেসিক বেতন: ৳${Math.round(baseSalary).toLocaleString('bn-BD')}</div><div class="a4-summary-box" style="background:#fff4f4; color:#c5221f;">মোট কর্তন: ৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="a4-summary-box" style="background:#e6f4ea; color:#137333;">নেট বেতন: ৳${Math.round(netSalary).toLocaleString('bn-BD')}</div></div>
             <div class="a4-footer">রিপোর্ট তৈরির তারিখ: ${genDate.getDate()}/${genDate.getMonth()+1}/${genDate.getFullYear()} — এই রিপোর্টটি সিস্টেম থেকে স্বয়ংক্রিয়ভাবে তৈরি হয়েছে।</div>
         `;
     }
@@ -1086,16 +796,12 @@ ${pagesHtml}
         const empId = empSel.value;
         const month = parseInt(monthSel.value);
         if (!empId) { showToast('❌ প্রথমে কর্মচারী নির্বাচন করুন!', 'error'); return; }
-
         const offscreen = document.getElementById('a4ReportOffscreen');
         offscreen.innerHTML = buildSingleEmployeeReportHtml(empId, month);
-
         showToast(mode === 'pdf' ? '📄 A4 PDF তৈরি হচ্ছে...' : '🖼️ PNG তৈরি হচ্ছে...', 'success');
-
-        // Let the DOM paint before capturing
         setTimeout(() => {
             html2canvas(offscreen, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 794, windowWidth: 794, scrollX: 0, scrollY: 0 }).then(canvas => {
-                const empName = employeeDatabase[empId];
+                const empName = getEmployeeName(empId, month, new Date().getFullYear());
                 if (mode === 'png') {
                     const link = document.createElement('a');
                     link.download = `Attendance_${empName}_${empId}_Month${month}.png`;
@@ -1103,47 +809,23 @@ ${pagesHtml}
                     document.body.appendChild(link); link.click(); document.body.removeChild(link);
                     showToast('✅ PNG ডাউনলোড সফল!', 'success');
                 } else {
-                    // A4 = 210mm x 297mm. Build a printable single-page HTML sized exactly to A4.
                     const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                    const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
-<title>Attendance Report - ${empName}</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  @page { size: A4; margin: 0; }
-  html, body { width:100%; background:#e8eaed; font-family:sans-serif; }
-  .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
-  .top-bar h2 { font-size:14px; font-weight:700; color:#90caf9; }
-  .print-btn { display:block; margin:16px auto; background:#c5221f; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; }
-  .a4-page { width:210mm; min-height:297mm; background:white; margin:16px auto; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:10mm; box-sizing:border-box; }
-  .a4-page img { width:100%; height:auto; display:block; }
-  @media print {
-    .top-bar, .print-btn { display:none !important; }
-    body { background:white; }
-    .a4-page { margin:0; box-shadow:none; width:210mm; min-height:297mm; padding:10mm; }
-  }
-</style></head><body>
+                    const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes"><title>Attendance Report - ${empName}</title><style>* { margin:0; padding:0; box-sizing:border-box; } @page { size: A4; margin: 0; } html, body { width:100%; background:#e8eaed; font-family:sans-serif; } .top-bar { background:#1a1f2e; color:white; width:100%; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; } .top-bar h2 { font-size:14px; font-weight:700; color:#90caf9; } .print-btn { display:block; margin:16px auto; background:#c5221f; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; } .a4-page { width:210mm; min-height:297mm; background:white; margin:16px auto; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:10mm; box-sizing:border-box; } .a4-page img { width:100%; height:auto; display:block; } @media print { .top-bar, .print-btn { display:none !important; } body { background:white; } .a4-page { margin:0; box-shadow:none; width:210mm; min-height:297mm; padding:10mm; } }</style></head><body>
 <div class="top-bar"><h2>📄 A4 হাজিরা রিপোর্ট — ${empName} (${empId})</h2></div>
 <div class="a4-page"><img src="${imgData}" /></div>
 <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
 </body></html>`;
                     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `Attendance_${empName}_${empId}_Month${month}.html`;
+                    const link = document.createElement('a'); link.href = url; link.download = `Attendance_${empName}_${empId}_Month${month}.html`;
                     document.body.appendChild(link); link.click(); document.body.removeChild(link);
                     setTimeout(() => URL.revokeObjectURL(url), 3000);
                     showToast('✅ A4 রিপোর্ট ডাউনলোড সফল! খুলে Print/Save as PDF করুন।', 'success');
                 }
                 offscreen.innerHTML = '';
-            }).catch(() => {
-                showToast('❌ রিপোর্ট তৈরিতে ত্রুটি হয়েছে।', 'error');
-                offscreen.innerHTML = '';
-            });
+            }).catch(() => { showToast('❌ রিপোর্ট তৈরিতে ত্রুটি হয়েছে।', 'error'); offscreen.innerHTML = ''; });
         }, 80);
     }
-    // ===== END SINGLE EMPLOYEE A4 REPORT LOGIC =====
 
     function getLocalDeviceId() {
         let devId = localStorage.getItem('office_app_device_token');
@@ -1207,9 +889,8 @@ ${pagesHtml}
         const daysInMonth = new Date(currentYear, selectedMonth, 0).getDate();
         const today = new Date();
         const isCurrentMonth = (today.getFullYear() === currentYear && (today.getMonth() + 1) === selectedMonth);
-
         Object.keys(employeeDatabase).forEach(empId => {
-            const empName = employeeDatabase[empId];
+            const empName = getEmployeeName(empId, selectedMonth, currentYear);
             const empLogs = logs.filter(log => { if (log.id !== empId) return false; let m = null; if (log.rawDate) m = new Date(log.rawDate).getMonth() + 1; return m === selectedMonth; });
             let monthDaysData = {};
             empLogs.forEach(log => { if (log.rawDate) { const dateDay = new Date(log.rawDate).getDate(); monthDaysData[dateDay] = log; } });
@@ -1217,14 +898,10 @@ ${pagesHtml}
             for (let d = 1; d <= daysInMonth; d++) {
                 const isTodayCell = (isCurrentMonth && today.getDate() === d) ? 'class="today-highlight"' : '';
                 if (monthDaysData[d]) {
-                    const logData = monthDaysData[d];
-                    const status = logData.status;
-                    const key = logData.fbKey;
-                    if (status === 'Off Day') {
-                        daysHtml += `<td ${isTodayCell}><span style="color:#1a73e8;font-weight:bold;font-size:11px;">Off Day</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`;
-                    } else if (status !== 'Absent') {
-                        pCount++;
-                        let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late';
+                    const logData = monthDaysData[d]; const status = logData.status; const key = logData.fbKey;
+                    if (status === 'Off Day') { daysHtml += `<td ${isTodayCell}><span style="color:#1a73e8;font-weight:bold;font-size:11px;">Off Day</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`; }
+                    else if (status !== 'Absent') {
+                        pCount++; let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late';
                         let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa; font-size:9px;">No Exit</span>`;
                         daysHtml += `<td ${isTodayCell}><div class="time-box-container"><span style="color:#137333;font-weight:bold;font-size:11px;">P</span><span class="${inTimeClass}">In: ${logData.time}</span>${outHtml}</div><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`;
                     } else { aCount++; daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`; }
@@ -1272,8 +949,10 @@ ${pagesHtml}
     function renderDeviceDashboard() {
         if (document.getElementById('adminDashboard').style.display !== 'block') return;
         deviceTableBody.innerHTML = '';
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
         Object.keys(employeeDatabase).forEach(empId => {
-            const empName = employeeDatabase[empId];
+            const empName = getEmployeeName(empId, currentMonth, currentYear);
             const hasDevice = globalDevices[empId];
             let statusText = hasDevice ? `<span style="color:#137333; font-weight:bold;">🔒 লকড (Device Bound)</span>` : `<span style="color:#b06000;">🔓 আনলকড (নতুন ফোনে এড হবে)</span>`;
             let actionBtn = hasDevice ? `<button class="btn-reset-dev" onclick="resetEmployeeDevice('${empId}')">Reset Device</button>` : `<button class="btn-reset-dev" disabled style="background:#eee; color:#aaa; border-color:#aaa; cursor:not-allowed;">No Active Device</button>`;
@@ -1284,7 +963,7 @@ ${pagesHtml}
     }
 
     window.resetEmployeeDevice = function(empId) {
-        if (confirm(`${employeeDatabase[empId]}-এর ডিভাইস লক রিসেট করতে চান?`)) {
+        if (confirm(`${getEmployeeName(empId, new Date().getMonth() + 1, new Date().getFullYear())}-এর ডিভাইস লক রিসেট করতে চান?`)) {
             db.ref(`registeredDevices/${empId}`).remove().then(() => { alert("ডিভাইস সফলভাবে রিসেট হয়েছে!"); });
         }
     }
@@ -1319,7 +998,6 @@ ${pagesHtml}
         const mDate = document.getElementById('manualDate').value; const mEntryTime = document.getElementById('manualEntryTime').value;
         const mExitTime = document.getElementById('manualExitTime').value;
         if (!mId || !mDate) { alert("সঠিক তথ্য দিন!"); return; }
-        // Duplicate check
         const selectedDateObj = new Date(mDate);
         const selDay = selectedDateObj.getDate();
         const selMonth = selectedDateObj.getMonth() + 1;
@@ -1330,13 +1008,14 @@ ${pagesHtml}
             return d.getDate() === selDay && (d.getMonth() + 1) === selMonth && d.getFullYear() === selYear;
         });
         if (existingRecords.length > 0) {
-            const empName = employeeDatabase[mId] || mId;
+            const empName = getEmployeeName(mId, selMonth, selYear);
             const confirmed = confirm(`⚠️ সতর্কতা!\n\n${empName} (${mId}) এর ${mDate} তারিখে ইতিমধ্যে ${existingRecords.length}টি রেকর্ড আছে।\n\nআগের রেকর্ড রেখে নতুন রেকর্ড যোগ করতে চান?\n\n✅ OK = যোগ করুন\n❌ Cancel = বাতিল করুন`);
             if (!confirmed) return;
         }
         const dtObj = getCustomBanglaDateTime(mDate, mEntryTime);
         const formattedExit = mExitTime ? formatManualTime12Hour(mExitTime) : "";
-        db.ref('attendanceLogs').push().set({ rawDate: dtObj.rawObj.toISOString(), date: dtObj.fullDate, id: mId, name: employeeDatabase[mId], time: dtObj.time, exitTime: formattedExit, status: mStatus });
+        const currentName = getEmployeeName(mId, selMonth, selYear);
+        db.ref('attendanceLogs').push().set({ rawDate: dtObj.rawObj.toISOString(), date: dtObj.fullDate, id: mId, name: currentName, time: dtObj.time, exitTime: formattedExit, status: mStatus });
         alert(`✅ তথ্য সফলভাবে যুক্ত হয়েছে।`);
     });
 
@@ -1415,13 +1094,14 @@ ${pagesHtml}
                     if (userTodayRecords.length > 0) {
                         const mainRecord = userTodayRecords[0];
                         if (mainRecord.status === 'Absent') { showBox('❌ আপনি আজ অলরেডি অনুপস্থিত (Absent) হিসেবে চিহ্নিত।', 'error'); submitBtn.disabled = false; return; }
-                        db.ref('attendanceLogs/' + mainRecord.fbKey).update({ exitTime: dt.time }).then(function() { incrementClickCount(empId, 'exit'); sendTelegramNotification(empId, employeeDatabase[empId], distance, dt.time, dt.fullDate, mainRecord.status, true); showBox('🚪 এক্সিট সফল! বের হওয়ার সময়: ' + dt.time, 'success'); submitBtn.disabled = false; }).catch(function() { showBox('❌ ডাটাবেজ আপডেট এরর! আবার চেষ্টা করুন।', 'error'); submitBtn.disabled = false; });
+                        db.ref('attendanceLogs/' + mainRecord.fbKey).update({ exitTime: dt.time }).then(function() { incrementClickCount(empId, 'exit'); sendTelegramNotification(empId, getEmployeeName(empId, currentMonth, currentYear), distance, dt.time, dt.fullDate, mainRecord.status, true); showBox('🚪 এক্সিট সফল! বের হওয়ার সময়: ' + dt.time, 'success'); submitBtn.disabled = false; }).catch(function() { showBox('❌ ডাটাবেজ আপডেট এরর! আবার চেষ্টা করুন।', 'error'); submitBtn.disabled = false; });
                         return;
                     }
-                    if (dt.rawObj.getHours() >= 20) { showBox('❌ অফিস সময় শেষ! আর হাজিরা নেওয়া সম্ভব নয়।', 'error'); db.ref('attendanceLogs').push().set({ rawDate: dt.rawObj.toISOString(), date: dt.fullDate, id: empId, name: employeeDatabase[empId], time: dt.time, exitTime: '', status: 'Absent' }); submitBtn.disabled = false; return; }
+                    if (dt.rawObj.getHours() >= 20) { showBox('❌ অফিস সময় শেষ! আর হাজিরা নেওয়া সম্ভব নয়।', 'error'); db.ref('attendanceLogs').push().set({ rawDate: dt.rawObj.toISOString(), date: dt.fullDate, id: empId, name: getEmployeeName(empId, currentMonth, currentYear), time: dt.time, exitTime: '', status: 'Absent' }); submitBtn.disabled = false; return; }
                     if (!registeredDeviceId) db.ref('registeredDevices/' + empId).set(currentDeviceId);
                     let finalStatus = 'Present'; const h = dt.rawObj.getHours(), m = dt.rawObj.getMinutes(); if (h > 11 || (h === 11 && m > 0)) finalStatus = 'Late';
-                    db.ref('attendanceLogs').push().set({ rawDate: dt.rawObj.toISOString(), date: dt.fullDate, id: empId, name: employeeDatabase[empId], time: dt.time, exitTime: '', status: finalStatus }).then(function() { incrementClickCount(empId, 'entry'); sendTelegramNotification(empId, employeeDatabase[empId], distance, dt.time, dt.fullDate, finalStatus, false); showBox('✅ হাজিরা (Entry) সফল! সময়: ' + dt.time, 'success'); submitBtn.disabled = false; }).catch(function() { showBox('❌ ডাটাবেজ সেভ এরর! আবার চেষ্টা করুন।', 'error'); submitBtn.disabled = false; });
+                    const currentName = getEmployeeName(empId, currentMonth, currentYear);
+                    db.ref('attendanceLogs').push().set({ rawDate: dt.rawObj.toISOString(), date: dt.fullDate, id: empId, name: currentName, time: dt.time, exitTime: '', status: finalStatus }).then(function() { incrementClickCount(empId, 'entry'); sendTelegramNotification(empId, currentName, distance, dt.time, dt.fullDate, finalStatus, false); showBox('✅ হাজিরা (Entry) সফল! সময়: ' + dt.time, 'success'); submitBtn.disabled = false; }).catch(function() { showBox('❌ ডাটাবেজ সেভ এরর! আবার চেষ্টা করুন।', 'error'); submitBtn.disabled = false; });
                 },
                 function(error) { submitBtn.disabled = false; if (error.code === error.PERMISSION_DENIED) { showBox('❌ লোকেশন পারমিশন দেওয়া হয়নি। ব্রাউজার সেটিংস থেকে পারমিশন দিয়ে আবার চেষ্টা করুন।', 'error'); } else if (error.code === error.POSITION_UNAVAILABLE) { showBox('❌ GPS লোকেশন সংগ্রহ ব্যর্থ হয়েছে। ডিভাইসের GPS চালু আছে কিনা দেখুন।', 'error'); } else if (error.code === error.TIMEOUT) { showBox('❌ GPS টাইমআউট! নেটওয়ার্ক বা GPS সংকেত দুর্বল। আবার চেষ্টা করুন।', 'error'); } else { showBox('❌ GPS এরর হয়েছে। আবার চেষ্টা করুন।', 'error'); } },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
@@ -1464,7 +1144,7 @@ ${pagesHtml}
         const today = new Date();
         const isCurrentMonth = (today.getFullYear() === currentYear && (today.getMonth() + 1) === selectedMonth);
         Object.keys(employeeDatabase).forEach(empId => {
-            const empName = employeeDatabase[empId];
+            const empName = getEmployeeName(empId, selectedMonth, currentYear);
             const empLogs = logs.filter(log => { if (log.id !== empId) return false; if (!log.rawDate) return false; return (new Date(log.rawDate).getMonth() + 1) === selectedMonth; });
             let monthDaysData = {};
             empLogs.forEach(log => { if (log.rawDate) { const dateDay = new Date(log.rawDate).getDate(); monthDaysData[dateDay] = log; } });
