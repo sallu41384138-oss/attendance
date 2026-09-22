@@ -231,11 +231,6 @@
         <div class="admin-grid">
             <select id="renameEmpId" class="admin-input">
                 <option value="">কর্মচারী নির্বাচন করুন...</option>
-                <option value="1001">1001</option>
-                <option value="1002">1002</option>
-                <option value="1003">1003</option>
-                <option value="1004">1004</option>
-                <option value="1005">1005</option>
             </select>
             <select id="renameMonth" class="admin-input">
                 <option value="1">জানুয়ারি</option>
@@ -254,7 +249,7 @@
         </div>
         <div class="admin-grid">
             <input type="text" id="renameNewName" class="admin-input" placeholder="নতুন নাম লিখুন">
-            <input type="number" id="renameYear" class="admin-input" placeholder="বছর" value="2025">
+            <input type="number" id="renameYear" class="admin-input" placeholder="বছর">
         </div>
         <button id="renameSaveBtn" class="btn-submit" style="background-color:#1a73e8;">✏️ নাম পরিবর্তন ও সংরক্ষণ</button>
         <div id="rename-msg" class="settings-msg" style="margin-top:10px;"></div>
@@ -263,8 +258,17 @@
     
     <div class="report-container" style="background: #eaf2fd; max-width: 1000px; margin-left: auto; margin-right: auto;">
         <h3 style="color: #1a73e8; font-weight: bold;">🛠️ ম্যানুয়াল এন্ট্রি প্যানেল</h3>
-        <div class="admin-grid"><select id="manualEmpId" class="admin-input"><option value="">কর্মচারী নির্বাচন করুন...</option><option value="1001">Utsob (1001)</option><option value="1002">Sagor (1002)</option><option value="1003">Rohan (1003)</option><option value="1004">Salman (1004)</option><option value="1005">Raihan (1005)</option></select>
-        <select id="manualStatus" class="admin-input"><option value="Present">Present (উপস্থিত)</option><option value="Off Day">Off Day (অফ ডে)</option><option value="Late">Late (দেরি)</option><option value="Absent">Absent (অনুপস্থিত)</option></select></div>
+        <div class="admin-grid">
+            <select id="manualEmpId" class="admin-input">
+                <option value="">কর্মচারী নির্বাচন করুন...</option>
+            </select>
+            <select id="manualStatus" class="admin-input">
+                <option value="Present">Present (উপস্থিত)</option>
+                <option value="Off Day">Off Day (অফ ডে)</option>
+                <option value="Late">Late (দেরি)</option>
+                <option value="Absent">Absent (অনুপস্থিত)</option>
+            </select>
+        </div>
         <div class="admin-grid"><input type="date" id="manualDate" class="admin-input"><input type="time" id="manualEntryTime" class="admin-input" placeholder="Entry Time" value="10:00"><input type="time" id="manualExitTime" class="admin-input" placeholder="Exit Time"></div>
         <button id="manualSubmitBtn" class="btn-submit" style="background-color: #1a73e8;">তথ্য যুক্ত / আপডেট করুন</button>
     </div>
@@ -277,11 +281,6 @@
                 <label class="settings-label" for="singleEmpId">কর্মচারী নির্বাচন করুন</label>
                 <select id="singleEmpId" class="admin-input" style="margin-bottom:0;">
                     <option value="">নির্বাচন করুন...</option>
-                    <option value="1001">Utsob (1001)</option>
-                    <option value="1002">Sagor (1002)</option>
-                    <option value="1003">Rohan (1003)</option>
-                    <option value="1004">Salman (1004)</option>
-                    <option value="1005">Raihan (1005)</option>
                 </select>
             </div>
             <div class="settings-group">
@@ -365,7 +364,6 @@
     const clickLimitRef = db.ref('clickLimits');
     let globalClickLimits = {};
     
-    // ===== EMPLOYEE NAME OVERRIDES (MONTH-WISE) =====
     const nameOverrideRef = db.ref('employeeNameOverrides');
     let globalNameOverrides = {};
     
@@ -376,6 +374,7 @@
             if (typeof renderSheetDashboard === 'function') renderSheetDashboard(globalAttendanceLogs);
             if (typeof generatePublicTableHeader === 'function') generatePublicTableHeader();
             if (typeof renderPublicSheetDashboard === 'function') renderPublicSheetDashboard(globalAttendanceLogs);
+            if (typeof refreshAllEmployeeDropdowns === 'function') refreshAllEmployeeDropdowns();
         });
     }
     
@@ -393,6 +392,7 @@
         const key = `${empId}_${year}_${month}`;
         nameOverrideRef.child(key).set(newName).then(() => {
             showRenameMsg('✅ নাম সফলভাবে সংরক্ষণ হয়েছে (সব ডিভাইসে আপডেট হবে)', 'success');
+            refreshAllEmployeeDropdowns();
         }).catch(err => {
             showRenameMsg('❌ সংরক্ষণ ব্যর্থ: ' + err.message, 'error');
         });
@@ -406,7 +406,61 @@
         el.style.display = 'block';
         setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
-    // ===== END NAME OVERRIDES =====
+    
+    // ============ ড্রপডাউন ডাইনামিক রিফ্রেশ ============
+    function refreshAllEmployeeDropdowns() {
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        
+        // ১. ম্যানুয়াল এন্ট্রি ড্রপডাউন
+        const manualSelect = document.getElementById('manualEmpId');
+        if (manualSelect) {
+            const currentValue = manualSelect.value;
+            manualSelect.innerHTML = '<option value="">কর্মচারী নির্বাচন করুন...</option>';
+            Object.keys(employeeDatabase).forEach(empId => {
+                const name = getEmployeeName(empId, currentMonth, currentYear);
+                const opt = document.createElement('option');
+                opt.value = empId;
+                opt.textContent = `${name} (${empId})`;
+                manualSelect.appendChild(opt);
+            });
+            manualSelect.value = currentValue;
+        }
+        
+        // ২. একক কর্মচারী রিপোর্ট ড্রপডাউন
+        const singleSelect = document.getElementById('singleEmpId');
+        if (singleSelect) {
+            const currentValue = singleSelect.value;
+            const singleMonth = parseInt(document.getElementById('singleEmpMonth')?.value) || currentMonth;
+            singleSelect.innerHTML = '<option value="">নির্বাচন করুন...</option>';
+            Object.keys(employeeDatabase).forEach(empId => {
+                const name = getEmployeeName(empId, singleMonth, currentYear);
+                const opt = document.createElement('option');
+                opt.value = empId;
+                opt.textContent = `${name} (${empId})`;
+                singleSelect.appendChild(opt);
+            });
+            singleSelect.value = currentValue;
+        }
+        
+        // ৩. নাম পরিবর্তন সেকশনের ড্রপডাউন
+        const renameSelect = document.getElementById('renameEmpId');
+        if (renameSelect) {
+            const currentValue = renameSelect.value;
+            const renameMonth = parseInt(document.getElementById('renameMonth')?.value) || currentMonth;
+            const renameYear = parseInt(document.getElementById('renameYear')?.value) || currentYear;
+            renameSelect.innerHTML = '<option value="">কর্মচারী নির্বাচন করুন...</option>';
+            Object.keys(employeeDatabase).forEach(empId => {
+                const name = getEmployeeName(empId, renameMonth, renameYear);
+                const opt = document.createElement('option');
+                opt.value = empId;
+                opt.textContent = `${name} (${empId})`;
+                renameSelect.appendChild(opt);
+            });
+            renameSelect.value = currentValue;
+        }
+    }
 
     function loadAppSettingsFromFirebase() {
         db.ref('appSettings').once('value', (snapshot) => {
@@ -619,11 +673,22 @@
         initDownloadDropdown();
         initSingleEmployeeReport();
         initRenameSection();
+        
+        // বছর ডিফল্ট সেট করুন
+        const renameYearInput = document.getElementById('renameYear');
+        if (renameYearInput) renameYearInput.value = new Date().getFullYear();
+        
+        // ড্রপডাউন প্রথমবার রিফ্রেশ
+        setTimeout(refreshAllEmployeeDropdowns, 500);
     });
     
     function initRenameSection() {
         const btn = document.getElementById('renameSaveBtn');
+        const monthSelect = document.getElementById('renameMonth');
+        const yearInput = document.getElementById('renameYear');
+        
         if (!btn) return;
+        
         btn.addEventListener('click', () => {
             const empId = document.getElementById('renameEmpId').value;
             const month = parseInt(document.getElementById('renameMonth').value);
@@ -631,6 +696,10 @@
             const newName = document.getElementById('renameNewName').value.trim();
             saveEmployeeNameOverride(empId, month, year, newName);
         });
+        
+        // মাস/বছর পরিবর্তন হলে ড্রপডাউন রিফ্রেশ করুন
+        if (monthSelect) monthSelect.addEventListener('change', refreshAllEmployeeDropdowns);
+        if (yearInput) yearInput.addEventListener('change', refreshAllEmployeeDropdowns);
     }
 
     function initDownloadDropdown() {
@@ -657,7 +726,16 @@
     function downloadExcel() {
         if (globalAttendanceLogs.length === 0) { alert("কোনো রেকর্ড নেই!"); return; }
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFআইডি,নাম,তারিখ,ইন টাইম,আউট টাইম,স্ট্যাটাস\n";
-        globalAttendanceLogs.forEach(log => { csvContent += `"${log.id}","${log.name}","${log.date}","${log.time}","${log.exitTime || '-'}","${log.status}"\n`; });
+        globalAttendanceLogs.forEach(log => {
+            let name = log.name;
+            if (log.rawDate) {
+                const d = new Date(log.rawDate);
+                const m = d.getMonth() + 1;
+                const y = d.getFullYear();
+                name = getEmployeeName(log.id, m, y);
+            }
+            csvContent += `"${log.id}","${name}","${log.date}","${log.time}","${log.exitTime || '-'}","${log.status}"\n`;
+        });
         const encodedUri = encodeURI(csvContent); const link = document.createElement("a");
         link.setAttribute("href", encodedUri); link.setAttribute("download", `Attendance_Sheet_Month_${monthFilter.value}.csv`);
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
@@ -726,7 +804,7 @@ ${pagesHtml}
             else { namePreview.innerHTML = '👤 নাম: — (উপরে থেকে কর্মচারী নির্বাচন করুন)'; }
         }
         empSel.addEventListener('change', updateNamePreview);
-        monthSel.addEventListener('change', updateNamePreview);
+        monthSel.addEventListener('change', () => { updateNamePreview(); refreshAllEmployeeDropdowns(); });
         updateNamePreview();
         btnPdf.addEventListener('click', () => generateSingleEmployeeA4('pdf'));
         btnPng.addEventListener('click', () => generateSingleEmployeeA4('png'));
@@ -850,6 +928,7 @@ ${pagesHtml}
             renderSheetDashboard(globalAttendanceLogs);
             renderDeviceDashboard();
             loadSettingsForms();
+            refreshAllEmployeeDropdowns();
         } else { alert('ভুল ইউজারনেম অথবা পাসওয়ার্ড!'); }
     });
 
