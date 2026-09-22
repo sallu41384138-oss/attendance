@@ -224,7 +224,6 @@
         <div class="table-responsive"><table class="device-table"><thead><tr style="background-color: #ffe0b2;"><th>আইডি</th><th>নাম</th><th>ডিভাইস লক স্ট্যাটাস</th><th>অ্যাকশন</th></tr></thead><tbody id="deviceTableBody"></tbody></table></div>
     </div>
     
-    <!-- ===== কর্মচারীর নাম পরিবর্তন সেকশন ===== -->
     <div class="report-container" style="max-width: 1000px; margin-left: auto; margin-right: auto; border: 1px solid #1a73e8;">
         <h3 style="color: #1a73e8; font-weight: bold;">✏️ কর্মচারীর নাম পরিবর্তন (মাস অনুযায়ী)</h3>
         <p style="font-size: 12px; color: #666; margin-top:-5px;">মাস ও বছর নির্বাচন করে নতুন নাম লিখে সংরক্ষণ করুন। পুরনো মাসের রেকর্ডে পুরনো নামই থাকবে।</p>
@@ -254,7 +253,6 @@
         <button id="renameSaveBtn" class="btn-submit" style="background-color:#1a73e8;">✏️ নাম পরিবর্তন ও সংরক্ষণ</button>
         <div id="rename-msg" class="settings-msg" style="margin-top:10px;"></div>
     </div>
-    <!-- ===== END নাম পরিবর্তন সেকশন ===== -->
     
     <div class="report-container" style="background: #eaf2fd; max-width: 1000px; margin-left: auto; margin-right: auto;">
         <h3 style="color: #1a73e8; font-weight: bold;">🛠️ ম্যানুয়াল এন্ট্রি প্যানেল</h3>
@@ -410,13 +408,11 @@
         setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
     
-    // ============ ড্রপডাউন ডাইনামিক রিফ্রেশ ============
     function refreshAllEmployeeDropdowns() {
         const now = new Date();
         const currentMonth = now.getMonth() + 1;
         const currentYear = now.getFullYear();
         
-        // ১. ম্যানুয়াল এন্ট্রি ড্রপডাউন (নাম + আইডি)
         const manualSelect = document.getElementById('manualEmpId');
         if (manualSelect) {
             const currentValue = manualSelect.value;
@@ -431,7 +427,6 @@
             manualSelect.value = currentValue;
         }
         
-        // ২. একক কর্মচারী রিপোর্ট ড্রপডাউন (নাম + আইডি)
         const singleSelect = document.getElementById('singleEmpId');
         if (singleSelect) {
             const currentValue = singleSelect.value;
@@ -447,7 +442,6 @@
             singleSelect.value = currentValue;
         }
         
-        // ৩. নাম পরিবর্তন সেকশনের ড্রপডাউন (⚠️ শুধু আইডি)
         const renameSelect = document.getElementById('renameEmpId');
         if (renameSelect) {
             const currentValue = renameSelect.value;
@@ -455,7 +449,7 @@
             Object.keys(employeeDatabase).forEach(empId => {
                 const opt = document.createElement('option');
                 opt.value = empId;
-                opt.textContent = empId;  // শুধু আইডি
+                opt.textContent = empId;
                 renameSelect.appendChild(opt);
             });
             renameSelect.value = currentValue;
@@ -899,10 +893,62 @@ ${pagesHtml}
         }, 80);
     }
 
+    // ============ ডিভাইস ফিঙ্গারপ্রিন্ট ও Combined ID ============
     function getLocalDeviceId() {
         let devId = localStorage.getItem('office_app_device_token');
         if (!devId) { devId = 'DEV-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); localStorage.setItem('office_app_device_token', devId); }
         return devId;
+    }
+    
+    function getDeviceFingerprint() {
+        try {
+            const nav = window.navigator;
+            const scr = window.screen;
+            const data = [
+                nav.userAgent || '',
+                nav.language || '',
+                (nav.languages || []).join(','),
+                scr.colorDepth || '',
+                scr.width + 'x' + scr.height,
+                scr.pixelDepth || '',
+                new Date().getTimezoneOffset(),
+                nav.hardwareConcurrency || '',
+                nav.platform || '',
+                nav.deviceMemory || ''
+            ].join('|');
+            let hash = 0;
+            for (let i = 0; i < data.length; i++) {
+                const char = data.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'FP-' + Math.abs(hash).toString(36);
+        } catch (e) {
+            return 'FP-unknown';
+        }
+    }
+    
+    function getCombinedDeviceId() {
+        return getLocalDeviceId() + '_' + getDeviceFingerprint();
+    }
+    
+    async function checkDeviceBoundToAnotherEmp(currentDeviceId, currentEmpId) {
+        try {
+            const snapshot = await db.ref('registeredDevices').once('value');
+            const allDevices = snapshot.val() || {};
+            for (const empId in allDevices) {
+                if (empId !== currentEmpId) {
+                    const savedDevId = allDevices[empId];
+                    if (savedDevId === currentDeviceId) {
+                        return empId;
+                    }
+                }
+            }
+            return null;
+        } catch (err) {
+            console.error('Device check error:', err);
+            return null;
+        }
     }
 
     document.getElementById('secretDotBtn').addEventListener('click', () => { const loginCard = document.getElementById('adminLoginCard'); loginCard.style.display = loginCard.style.display === 'block' ? 'none' : 'block'; });
@@ -1152,12 +1198,31 @@ ${pagesHtml}
         const currentMode = getCurrentMode();
         if (currentMode === 'closed') { showBox('🔒 এখন অফিস সময়ের বাইরে। হাজিরা দেওয়া যাবে না।', 'error'); return; }
         if (getClickCount(empId, currentMode) >= 1) { document.getElementById('clickLimitAlert').style.display = 'block'; const modeText = currentMode === 'entry' ? 'Entry' : 'Exit'; showBox('⛔ আপনি আজ ' + modeText + ' হাজিরা ইতিমধ্যে দিয়েছেন।', 'error'); return; }
-        const currentDeviceId = getLocalDeviceId(); submitBtn.disabled = true; showBox('ডাটাবেজ ও সিকিউরিটি চেক করা হচ্ছে...', 'loading');
+        
+        const currentDeviceId = getCombinedDeviceId();
+        submitBtn.disabled = true; showBox('ডাটাবেজ ও সিকিউরিটি চেক করা হচ্ছে...', 'loading');
+        
         const todayObj = new Date(); const currentDay = todayObj.getDate(); const currentMonth = todayObj.getMonth() + 1; const currentYear = todayObj.getFullYear();
         const userTodayRecords = globalAttendanceLogs.filter(function(log) { if (log.id !== empId || !log.rawDate) return false; const d = new Date(log.rawDate); return d.getDate() === currentDay && (d.getMonth() + 1) === currentMonth && d.getFullYear() === currentYear; });
-        db.ref('registeredDevices/' + empId).once('value', function(snapshot) {
+        
+        db.ref('registeredDevices/' + empId).once('value', async function(snapshot) {
             const registeredDeviceId = snapshot.val();
-            if (registeredDeviceId && registeredDeviceId !== currentDeviceId) { showBox('❌ ডিভাইস সিকিউরিটি অ্যালার্ট! আপনার নিজের ফোন থেকে হাজিরা দিন।', 'error'); submitBtn.disabled = false; return; }
+            
+            // 🔐 NEW: এই ডিভাইস অন্য empId-তে বাঁধা কিনা চেক
+            const boundToOtherEmp = await checkDeviceBoundToAnotherEmp(currentDeviceId, empId);
+            if (boundToOtherEmp) {
+                const otherName = getEmployeeName(boundToOtherEmp, currentMonth, currentYear);
+                showBox(`❌ এই ফোনটি ইতিমধ্যে ${otherName} (${boundToOtherEmp})-এর সাথে বাঁধা! আপনি এই ফোন থেকে হাজিরা দিতে পারবেন না। অ্যাডমিনের সাথে যোগাযোগ করুন।`, 'error');
+                submitBtn.disabled = false;
+                return;
+            }
+            
+            if (registeredDeviceId && registeredDeviceId !== currentDeviceId) {
+                showBox('❌ ডিভাইস সিকিউরিটি অ্যালার্ট! এই ফোনটি অন্য কারো নামে রেজিস্টার্ড। নিজের ফোন থেকে হাজিরা দিন।', 'error');
+                submitBtn.disabled = false;
+                return;
+            }
+            
             showBox('লোকেশন ভেরিফাই করা হচ্ছে...', 'loading');
             navigator.geolocation.getCurrentPosition(
                 function(position) {
