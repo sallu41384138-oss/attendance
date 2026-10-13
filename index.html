@@ -65,7 +65,7 @@
         .salary-input-cell { min-width: 150px; background-color: #f0f7ff; }
         .salary-input { width: 80px; padding: 4px 6px; border: 1px solid #1a73e8; border-radius: 5px; font-size: 12px; font-weight: bold; color: #1a73e8; text-align: center; outline: none; background: white; }
         .btn-save-salary { background: #1a73e8; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; touch-action: manipulation; }
-        .btn-save-salary:active { background: #0d47a1; }
+        .btn-save-salary:active { background-color: #0d47a1; }
         .salary-deduct-cell { background-color: #fff4f4; min-width: 80px; }
         .salary-net-cell { background-color: #f0faf0; min-width: 80px; }
         .deduct-badge { color: #c5221f; font-weight: bold; font-size: 12px; }
@@ -351,6 +351,9 @@
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // ✅ সবসময় ৩০ দিন দিয়ে বেতন হিসাব হবে
+    const FIXED_SALARY_DAYS = 30;
 
     let cachedAppSettings = { startTime: '11:00', endTime: '20:00', workingDays: 26, password: 'Aminternet' };
     let cachedGpsSettings = { lat: 23.936146, lng: 90.710038, radius: 50 };
@@ -837,8 +840,9 @@ ${pagesHtml}
         const salaryKey = `${empId}_${month}_${currentYear}`;
         const savedSalary = globalSalaries[salaryKey] || 0;
         const baseSalary = parseFloat(savedSalary) || 0;
-        const dailyRate = daysInMonth > 0 ? (baseSalary / daysInMonth) : 0;
-        const perMinuteRate = baseSalary / (daysInMonth * 9 * 60);
+        // ✅ সবসময় ৩০ দিন দিয়ে হিসাব
+        const dailyRate = baseSalary / FIXED_SALARY_DAYS;
+        const perMinuteRate = baseSalary / (FIXED_SALARY_DAYS * 9 * 60);
         const paidDays = pCount + offCount;
         const earnedSalary = paidDays * dailyRate;
         const absentDeduction = aCount * dailyRate;
@@ -1033,8 +1037,9 @@ ${pagesHtml}
             const salaryKey = `${empId}_${selectedMonth}_${currentYear}`;
             const savedSalary = globalSalaries[salaryKey] || '';
             const baseSalary = parseFloat(savedSalary) || 0;
-            const dailyRate = daysInMonth > 0 ? (baseSalary / daysInMonth) : 0;
-            const perMinuteRate = baseSalary / (daysInMonth * 9 * 60);
+            // ✅ সবসময় ৩০ দিন দিয়ে হিসাব
+            const dailyRate = baseSalary / FIXED_SALARY_DAYS;
+            const perMinuteRate = baseSalary / (FIXED_SALARY_DAYS * 9 * 60);
             const paidDays = pCount + offCount;
             const earnedSalary = paidDays * dailyRate;
             const absentDeduction = aCount * dailyRate;
@@ -1299,8 +1304,9 @@ ${pagesHtml}
             const salaryKey = `${empId}_${selectedMonth}_${currentYear}`;
             const savedSalary = globalSalaries[salaryKey] || '';
             const baseSalary = parseFloat(savedSalary) || 0;
-            const dailyRate = daysInMonth > 0 ? (baseSalary / daysInMonth) : 0;
-            const perMinuteRate = baseSalary / (daysInMonth * 9 * 60);
+            // ✅ সবসময় ৩০ দিন দিয়ে হিসাব
+            const dailyRate = baseSalary / FIXED_SALARY_DAYS;
+            const perMinuteRate = baseSalary / (FIXED_SALARY_DAYS * 9 * 60);
             const paidDays = pCount + offCount;
             const earnedSalary = paidDays * dailyRate;
             const absentDeduction = aCount * dailyRate;
