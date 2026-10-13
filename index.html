@@ -837,13 +837,14 @@ ${pagesHtml}
         const salaryKey = `${empId}_${month}_${currentYear}`;
         const savedSalary = globalSalaries[salaryKey] || 0;
         const baseSalary = parseFloat(savedSalary) || 0;
-        const perDayRate = baseSalary / daysInMonth;
+        const dailyRate = daysInMonth > 0 ? (baseSalary / daysInMonth) : 0;
         const perMinuteRate = baseSalary / (daysInMonth * 9 * 60);
-        const absentDeduction = aCount * perDayRate;
+        const paidDays = pCount + offCount;
+        const earnedSalary = paidDays * dailyRate;
         const lateDeduction = totalLateMinutes * perMinuteRate;
         const earlyDeduction = totalEarlyMinutes * perMinuteRate;
-        const totalDeduction = absentDeduction + lateDeduction + earlyDeduction;
-        let netSalary = baseSalary - totalDeduction;
+        const totalDeduction = lateDeduction + earlyDeduction;
+        let netSalary = earnedSalary - totalDeduction;
         if (netSalary < 0) netSalary = 0;
         const genDate = new Date();
         return `
@@ -1014,12 +1015,12 @@ ${pagesHtml}
             const empLogs = logs.filter(log => { if (log.id !== empId) return false; let m = null; if (log.rawDate) m = new Date(log.rawDate).getMonth() + 1; return m === selectedMonth; });
             let monthDaysData = {};
             empLogs.forEach(log => { if (log.rawDate) { const dateDay = new Date(log.rawDate).getDate(); monthDaysData[dateDay] = log; } });
-            let daysHtml = ''; let pCount = 0; let aCount = 0;
+            let daysHtml = ''; let pCount = 0; let aCount = 0; let offCount = 0;
             for (let d = 1; d <= daysInMonth; d++) {
                 const isTodayCell = (isCurrentMonth && today.getDate() === d) ? 'class="today-highlight"' : '';
                 if (monthDaysData[d]) {
                     const logData = monthDaysData[d]; const status = logData.status; const key = logData.fbKey;
-                    if (status === 'Off Day') { daysHtml += `<td ${isTodayCell}><span style="color:#1a73e8;font-weight:bold;font-size:11px;">Off Day</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`; }
+                    if (status === 'Off Day') { offCount++; daysHtml += `<td ${isTodayCell}><span style="color:#1a73e8;font-weight:bold;font-size:11px;">Off Day</span><button class="btn-delete" onclick="deleteRecord('${key}')">×</button></td>`; }
                     else if (status !== 'Absent') {
                         pCount++; let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late';
                         let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa; font-size:9px;">No Exit</span>`;
@@ -1031,10 +1032,10 @@ ${pagesHtml}
             const salaryKey = `${empId}_${selectedMonth}_${currentYear}`;
             const savedSalary = globalSalaries[salaryKey] || '';
             const baseSalary = parseFloat(savedSalary) || 0;
-            const totalDaysInMonth = daysInMonth;
-            const perDayRate = baseSalary / totalDaysInMonth;
-            const perMinuteRate = baseSalary / (totalDaysInMonth * 9 * 60);
-            const absentDeduction = aCount * perDayRate;
+            const dailyRate = daysInMonth > 0 ? (baseSalary / daysInMonth) : 0;
+            const perMinuteRate = baseSalary / (daysInMonth * 9 * 60);
+            const paidDays = pCount + offCount;
+            const earnedSalary = paidDays * dailyRate;
             const appSett = getAppSettings();
             const [offStartH, offStartM] = (appSett.startTime || '11:00').split(':').map(Number);
             const [offEndH, offEndM] = (appSett.endTime || '20:00').split(':').map(Number);
@@ -1046,11 +1047,11 @@ ${pagesHtml}
             let totalEarlyExitMinutes = 0;
             empLogs.forEach(log => { if (!log.exitTime || log.exitTime.trim() === '') return; const exitMins = parseTime12hToMinutes(log.exitTime); if (exitMins === null) return; const earlyMin = officeEndTotalMin - exitMins; if (earlyMin > 0) totalEarlyExitMinutes += earlyMin; });
             const earlyExitDeduction = totalEarlyExitMinutes * perMinuteRate;
-            const totalDeduction = absentDeduction + lateDeduction + earlyExitDeduction;
-            let netSalary = baseSalary - totalDeduction;
+            const totalDeduction = lateDeduction + earlyExitDeduction;
+            let netSalary = earnedSalary - totalDeduction;
             if (netSalary < 0) netSalary = 0;
-            const deductHtml = baseSalary > 0 ? `<div class="deduct-badge">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">অনুপস্থিত: ${Math.round(absentDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">আর্লি (${totalEarlyExitMinutes} মি.): ${Math.round(earlyExitDeduction).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
-            const netHtml = baseSalary > 0 ? `<div class="net-badge">৳${Math.round(netSalary).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
+            const deductHtml = baseSalary > 0 ? `<div class="deduct-badge">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">আর্লি (${totalEarlyExitMinutes} মি.): ${Math.round(earlyExitDeduction).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
+            const netHtml = baseSalary > 0 ? `<div class="net-badge">৳${Math.round(netSalary).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="color:#888;">(${paidDays} দিন × ৳${Math.round(dailyRate)})</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
             row.innerHTML = `<td class="meta-cell adm-sticky-id">${empId}</td><td class="meta-cell adm-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td>
             <td class="salary-input-cell"><div style="font-size:11px;font-weight:800;color:#1a73e8;margin-bottom:4px;white-space:nowrap;">👤 ${empName} (${empId})</div><div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><input type="number" class="salary-input" id="sal_${empId}" value="${savedSalary}" placeholder="০" min="0" style="flex:1;"></div></td>
             <td style="background:#e8f0fe; text-align:center; vertical-align:middle;"><button class="btn-save-salary" onclick="saveSalaryToFirebase('${empId}', ${selectedMonth}, ${currentYear}, this)" style="background:#34a853; color:white; border:none; border-radius:6px; padding:6px 10px; font-size:11px; font-weight:bold; cursor:pointer;">💾 সংরক্ষণ</button></td>
@@ -1210,7 +1211,6 @@ ${pagesHtml}
         db.ref('registeredDevices/' + empId).once('value', async function(snapshot) {
             const registeredDeviceId = snapshot.val();
             
-            // 🔐 NEW: এই ডিভাইস অন্য empId-তে বাঁধা কিনা চেক
             const boundToOtherEmp = await checkDeviceBoundToAnotherEmp(currentDeviceId, empId);
             if (boundToOtherEmp) {
                 const otherName = getEmployeeName(boundToOtherEmp, currentMonth, currentYear);
@@ -1288,18 +1288,19 @@ ${pagesHtml}
             const empLogs = logs.filter(log => { if (log.id !== empId) return false; if (!log.rawDate) return false; return (new Date(log.rawDate).getMonth() + 1) === selectedMonth; });
             let monthDaysData = {};
             empLogs.forEach(log => { if (log.rawDate) { const dateDay = new Date(log.rawDate).getDate(); monthDaysData[dateDay] = log; } });
-            let daysHtml = ''; let pCount = 0; let aCount = 0;
+            let daysHtml = ''; let pCount = 0; let aCount = 0; let offCount = 0;
             for (let d = 1; d <= daysInMonth; d++) {
                 const isTodayCell = (isCurrentMonth && today.getDate() === d) ? 'class="today-highlight"' : '';
-                if (monthDaysData[d]) { const logData = monthDaysData[d]; const status = logData.status; if (status === 'Off Day') { daysHtml += `<td ${isTodayCell}><span style="color:#1a73e8;font-weight:bold;font-size:11px;">Off Day</span></td>`; } else if (status !== 'Absent') { pCount++; let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late'; let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa;font-size:9px;">No Exit</span>`; daysHtml += `<td ${isTodayCell}><div class="time-box-container"><span style="color:#137333;font-weight:bold;font-size:11px;">P</span><span class="${inTimeClass}">In: ${logData.time}</span>${outHtml}</div></td>`; } else { aCount++; daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span></td>`; } }
+                if (monthDaysData[d]) { const logData = monthDaysData[d]; const status = logData.status; if (status === 'Off Day') { offCount++; daysHtml += `<td ${isTodayCell}><span style="color:#1a73e8;font-weight:bold;font-size:11px;">Off Day</span></td>`; } else if (status !== 'Absent') { pCount++; let inTimeClass = status === 'Present' ? 'grid-time-in' : 'grid-time-late'; let outHtml = logData.exitTime ? `<span class="grid-time-out">Out: ${logData.exitTime}</span>` : `<span style="color:#aaa;font-size:9px;">No Exit</span>`; daysHtml += `<td ${isTodayCell}><div class="time-box-container"><span style="color:#137333;font-weight:bold;font-size:11px;">P</span><span class="${inTimeClass}">In: ${logData.time}</span>${outHtml}</div></td>`; } else { aCount++; daysHtml += `<td ${isTodayCell}><span class="grid-a">A</span></td>`; } }
                 else { daysHtml += `<td ${isTodayCell}></td>`; }
             }
             const salaryKey = `${empId}_${selectedMonth}_${currentYear}`;
             const savedSalary = globalSalaries[salaryKey] || '';
             const baseSalary = parseFloat(savedSalary) || 0;
-            const perDayRate = baseSalary / daysInMonth;
+            const dailyRate = daysInMonth > 0 ? (baseSalary / daysInMonth) : 0;
             const perMinuteRate = baseSalary / (daysInMonth * 9 * 60);
-            const absentDeduction = aCount * perDayRate;
+            const paidDays = pCount + offCount;
+            const earnedSalary = paidDays * dailyRate;
             const pubSett = getAppSettings();
             const [pubStartH, pubStartM] = (pubSett.startTime || '11:00').split(':').map(Number);
             const [pubEndH, pubEndM] = (pubSett.endTime || '20:00').split(':').map(Number);
@@ -1311,13 +1312,13 @@ ${pagesHtml}
             let totalEarlyMinutes = 0;
             empLogs.forEach(log => { if (!log.exitTime || log.exitTime.trim() === '') return; const exitMins = parseTime12hToMinutes(log.exitTime); if (exitMins === null) return; const em = pubOfficeEndMin - exitMins; if (em > 0) totalEarlyMinutes += em; });
             const earlyDeduction = totalEarlyMinutes * perMinuteRate;
-            const totalDeduction = absentDeduction + lateDeduction + earlyDeduction;
-            let netSalary = baseSalary - totalDeduction;
+            const totalDeduction = lateDeduction + earlyDeduction;
+            let netSalary = earnedSalary - totalDeduction;
             if (netSalary < 0) netSalary = 0;
             const salaryHtml = baseSalary > 0 ? `৳${Math.round(baseSalary).toLocaleString('bn-BD')}` : `—`;
             const pubLateHtml = totalLateMinutes > 0 ? `<div style="font-size:12px;font-weight:800;color:#92400e;">${baseSalary > 0 ? totalLateMinutes + ' min (' + Math.round(lateDeduction) + ' Tk)' : totalLateMinutes + ' min'}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
             const pubEarlyHtml = totalEarlyMinutes > 0 ? `<div style="font-size:12px;font-weight:800;color:#1e3a8a;">${baseSalary > 0 ? totalEarlyMinutes + ' min (' + Math.round(earlyDeduction) + ' Tk)' : totalEarlyMinutes + ' min'}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
-            const deductHtml = baseSalary > 0 ? `<div class="deduct-badge" style="color:#c5221f;font-weight:bold;font-size:12px;">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;margin-top:2px;">অনুপস্থিত: ${Math.round(absentDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;">আর্লি (${totalEarlyMinutes} মি.): ${Math.round(earlyDeduction).toLocaleString('bn-BD')}</div>` : `—`;
+            const deductHtml = baseSalary > 0 ? `<div class="deduct-badge" style="color:#c5221f;font-weight:bold;font-size:12px;">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;margin-top:2px;">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail" style="font-size:9px;color:#888;">আর্লি (${totalEarlyMinutes} মি.): ${Math.round(earlyDeduction).toLocaleString('bn-BD')}</div>` : `—`;
             const netHtml = baseSalary > 0 ? `৳${Math.round(netSalary).toLocaleString('bn-BD')}` : `—`;
             const row = document.createElement('tr');
             row.innerHTML = `<td class="meta-cell pub-sticky-id">${empId}</td><td class="meta-cell pub-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td><td class="pub-salary-cell"><div style="font-size:9px;font-weight:800;color:#1a73e8;margin-bottom:2px;white-space:nowrap;">👤 ${empName}</div>${salaryHtml}</td>
