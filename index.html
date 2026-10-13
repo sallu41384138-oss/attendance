@@ -843,7 +843,8 @@ ${pagesHtml}
         const lateDeduction = totalLateMinutes * perMinuteRate;
         const earlyDeduction = totalEarlyMinutes * perMinuteRate;
         const totalDeduction = absentDeduction + lateDeduction + earlyDeduction;
-        const netSalary = baseSalary - totalDeduction;
+        let netSalary = baseSalary - totalDeduction;
+        if (netSalary < 0) netSalary = 0;
         const genDate = new Date();
         return `
             <div class="a4-header"><h1>📋 মাসিক হাজিরা ও বেতন রিপোর্ট</h1><p>স্মার্ট হাজিরা সিস্টেম — Developed by সালমান</p></div>
@@ -1046,7 +1047,8 @@ ${pagesHtml}
             empLogs.forEach(log => { if (!log.exitTime || log.exitTime.trim() === '') return; const exitMins = parseTime12hToMinutes(log.exitTime); if (exitMins === null) return; const earlyMin = officeEndTotalMin - exitMins; if (earlyMin > 0) totalEarlyExitMinutes += earlyMin; });
             const earlyExitDeduction = totalEarlyExitMinutes * perMinuteRate;
             const totalDeduction = absentDeduction + lateDeduction + earlyExitDeduction;
-            const netSalary = baseSalary - totalDeduction;
+            let netSalary = baseSalary - totalDeduction;
+            if (netSalary < 0) netSalary = 0;
             const deductHtml = baseSalary > 0 ? `<div class="deduct-badge">-৳${Math.round(totalDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">অনুপস্থিত: ${Math.round(absentDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">লেট (${totalLateMinutes} মি.): ${Math.round(lateDeduction).toLocaleString('bn-BD')}</div><div class="deduct-detail">আর্লি (${totalEarlyExitMinutes} মি.): ${Math.round(earlyExitDeduction).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
             const netHtml = baseSalary > 0 ? `<div class="net-badge">৳${Math.round(netSalary).toLocaleString('bn-BD')}</div>` : `<span style="color:#ccc; font-size:10px;">—</span>`;
             row.innerHTML = `<td class="meta-cell adm-sticky-id">${empId}</td><td class="meta-cell adm-sticky-name" style="color:#1a73e8;">${empName}</td>${daysHtml}<td><span class="summary-badge-p">${pCount}</span></td><td><span class="summary-badge-a">${aCount}</span></td>
@@ -1310,7 +1312,8 @@ ${pagesHtml}
             empLogs.forEach(log => { if (!log.exitTime || log.exitTime.trim() === '') return; const exitMins = parseTime12hToMinutes(log.exitTime); if (exitMins === null) return; const em = pubOfficeEndMin - exitMins; if (em > 0) totalEarlyMinutes += em; });
             const earlyDeduction = totalEarlyMinutes * perMinuteRate;
             const totalDeduction = absentDeduction + lateDeduction + earlyDeduction;
-            const netSalary = baseSalary - totalDeduction;
+            let netSalary = baseSalary - totalDeduction;
+            if (netSalary < 0) netSalary = 0;
             const salaryHtml = baseSalary > 0 ? `৳${Math.round(baseSalary).toLocaleString('bn-BD')}` : `—`;
             const pubLateHtml = totalLateMinutes > 0 ? `<div style="font-size:12px;font-weight:800;color:#92400e;">${baseSalary > 0 ? totalLateMinutes + ' min (' + Math.round(lateDeduction) + ' Tk)' : totalLateMinutes + ' min'}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
             const pubEarlyHtml = totalEarlyMinutes > 0 ? `<div style="font-size:12px;font-weight:800;color:#1e3a8a;">${baseSalary > 0 ? totalEarlyMinutes + ' min (' + Math.round(earlyDeduction) + ' Tk)' : totalEarlyMinutes + ' min'}</div>` : `<span style="color:#ccc;font-size:10px;">—</span>`;
